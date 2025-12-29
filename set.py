@@ -31,15 +31,17 @@ def setting():
         borderRadius=3, colour=pygame.Color('green'), values=[False, True], direction='down', textHAlign='left'
     )
     text3 = f1.render('разрешение', True, (180, 0, 0))
-    if CONFIG["resolution"] == "ful": n_dropd_3 = "полный экран"
-    else: n_dropd_3 = "1920x1080"
+    if CONFIG["resolution"] == "auto": n_dropd_3 = "авто"
+    elif CONFIG["resolution"] == "1920x1080": n_dropd_3 = "1920x1080"
+    else: n_dropd_3 = "1632x918"
     dropdown_3 = Dropdown(
         screen, WIDTH//2, HEIGHT//6, 200, 100, name = n_dropd_3,
         choices=[
-            "полный экран",
-            "1920x1080"
+            "авто",
+            "1920x1080",
+            "1632x918"
         ],
-        borderRadius=3, colour=pygame.Color('green'), values=["полный экран", "1920x1080"], direction='down', textHAlign='left'
+        borderRadius=3, colour=pygame.Color('green'), values=["auto", "1920x1080", "1632x918"], direction='down', textHAlign='left'
     )
 
     def stop_setting():
@@ -47,6 +49,7 @@ def setting():
         if dropdown_1.getSelected() != None:CONFIG["FPS_see"] = dropdown_1.getSelected()
         if dropdown_2.getSelected() != None:CONFIG["matrix"] = dropdown_2.getSelected()
         if dropdown_3.getSelected() != None:CONFIG["resolution"] = dropdown_3.getSelected()
+        
         with open('setting.json', 'w',encoding='utf-8') as json_file:json.dump(CONFIG, json_file, indent=4)
 
 
@@ -58,7 +61,7 @@ def setting():
         textVAlign='bottom'
     )
     textF = f1.render("Мало врагов? Нажми F2.", True, (180, 0, 0))
-    textV = f1.render('версия: 0.1, "Милая"', True, (180, 0, 0))
+    textV = f1.render('версия: 1.1, "Милая"', True, (180, 0, 0))
     run = True
     while run:
         events = pygame.event.get()
@@ -79,5 +82,7 @@ def setting():
         pygame_widgets.update(events)
         pygame.display.update()
 
+
+class Setting():pass
 #! используется для предотвращения потери переменной при открытии настроек или окна сохранить игру
 def setting_error(): from main import CONFIG, screen, WIDTH, HEIGHT 

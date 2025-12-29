@@ -3,23 +3,43 @@ import random
 import ctypes # узнаём разрешение экрана
 import json
 import sys
-from tkinter import *
+import os
+
+import toml  # файл конфигурации
+import numpy as np
+
 
 
 # мои коды
 import set
-import save_loading_game
 from menu import Button_1, Button_2 # мои кнопки прочее
 
 
-import option #файл для вынесения некоторых функций из основного кода
-import sprite_build # спрайты различных построек
-
-from bullet import Bullet_1 # класс для выстрелов
+from level import SurferLevel
+from option import grids_config, img, resetting_progress, loading_game, save_game
+from sprites.arrow import Arrow# спрайты различных построек
+from sprites.map import Map
+from sprites.window import Window
+from sprites.bullet import Bullet_1 # класс для выстрелов
 
 
 # спрайты зомби в папке zombies
-from zombies.zombie_1 import Zombie_1, Zombie_2, Zombie_3, Zombie_4
+from sprites.zombie_1 import Zombie_1, Zombie_2, Zombie_3, Zombie_4
+
+
+
+with open('config.toml', 'r') as f:  
+    DATA = toml.load(f)  
+
+SAVE = loading_game()
+
+# кол-во клеток
+cell_count = 4800 # 96 x 50
+# переменные для отчёта изменения при перемещении камеры
+grid_x = 0
+grid_y = 0
+
+
 
 try:
     with open('setting.json', 'r',encoding='utf-8') as json_file:
@@ -28,21 +48,39 @@ except FileNotFoundError:
     CONFIG = {      # настройки
             "FPS_see": True, # отображение фпс
             "matrix": False, # сетка
-            "resolution": "ful", # разрешение экрана
+            "resolution": "auto", # разрешение экрана
             }  
 
-if CONFIG["resolution"] == "ful":
+if CONFIG["resolution"] == "auto":
     geom_disp = ctypes.windll.user32 # получаем разрешение монитора
     geom_disp.SetProcessDPIAware()
-    WIDTH = geom_disp.GetSystemMetrics(0) # ширина
-    HEIGHT = geom_disp.GetSystemMetrics(1) # высота
-else:
+    WIDTHS = geom_disp.GetSystemMetrics(0) # ширина
+    HEIGHTS = geom_disp.GetSystemMetrics(1) # высота
+
+    if WIDTHS < 2560 and WIDTHS >= 1920 and HEIGHTS < 1440 and HEIGHTS >= 1080:
+        WIDTH = 1920
+        HEIGHT = 1080
+
+
+    else:
+
+        WIDTH = 1632
+        HEIGHT = 918
+        
+
+elif CONFIG["resolution"] == "1920x1080":
     WIDTH = 1920
     HEIGHT = 1080
+    
+else:   #* в любом случае выбираем это, так же это вызовет искажённый файл настроек
+    WIDTH = 1632
+    HEIGHT = 918
+    
 
-FPS = 60
+FPS = DATA['game']['FPS']
+GRID = WIDTH//96
 
-
+GAME_HEIGHT = HEIGHT - GRID * 4
 # Задаем цвета
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -56,86 +94,87 @@ pygame.font.init()
 pygame.init()
 pygame.mixer.init()
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT) )
-
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF)
+screen.set_alpha(None)  #* отключаем альфа канал для производительности
 pygame.display.set_caption("Enemy fan")
 clock = pygame.time.Clock()
 
 f1 = pygame.font.Font(None, 36)
 mousex, mousey = pygame.mouse.get_pos() # курсор
-GRID = 20
-# кол-во клеток
-cell_count = 5184 # 96 x 54
-# переменные для отчёта изменения при перемещении камеры
-grid_x = 0
-grid_y = 0
+
 #сетка
 
 game = False # запущена ли у нас игра
 
-
+LEVEL = False # какой уровень 
 
 IMAGE = {"numbers": {}, #словарь с изображениями
         "background":{"main": ""},
         "buttons": {}, #словарь с кнопками
-        "decoration":{}, # словарь с кнопками декораций
-        "interior": {}, # словарь с интерьером
-        "build":{} # словарь с строительными блоками
+        "intro":[],
+        "zombie": {
+            "1": {
+                "left": [],
+                "right":[]
+            },
+            "2": {
+                "left": [],
+                "right":[]
+            }
+        }
         } 
 
 
 
-IMAGE = option.img(IMAGE)
+IMAGE = img(IMAGE)
 MAPS = {} # словарь со значением о всех клетках на карте
-OPT = "0"  # переменная что хотим поставить
+OPT = 0  # переменная что хотим поставить
 
-
+Zom_x = WIDTH//2 - GRID*2   #*куда должны идти зомби, координаты базы
+Zom_y = GAME_HEIGHT - GRID*4
 
 obj_btn_1 = []  #   для кнопок
 obj_btn_2 = []
+obj_btn_3 = []  #   выбор уровней
+
+fin = len(IMAGE["intro"])
 
 
 
-class Map(pygame.sprite.Sprite): # спрайты карты
+
+
+
+
+
+
+class Matrix(pygame.sprite.DirtySprite):
+    def __init__(self, x, y, IMAGE):
+        super().__init__()
+        self.dirty = 2
+        self.count = 0
+        self.IMAGE = IMAGE
+        self.image = random.choice(IMAGE["numbers"])
+        self.rect = self.image.get_rect(topleft=(x, y))
+        
+        # Увеличиваем интервалы обновления
+        self.count_finish = random.randint(5, 15)  # Мс вместо циклов
+        self.last_change = pygame.time.get_ticks()
+        
+        # Добавляем флаг видимости для оптимизации
+        self.is_visible = True
     
-    def __init__(self, x, y, number, color): # number - номер клетки
-        pygame.sprite.Sprite.__init__(self)
-        self.size_image = 25
-        self.color = color
-        self.color_n = color # дополнительный цвет
-        if CONFIG["matrix"] == False:
-            self.image = pygame.Surface((self.size_image, self.size_image))
-            self.image.fill(self.color)
-        else:
-            image = random.choice(IMAGE["numbers"])
-            self.image = pygame.transform.scale(image, (self.size_image, self.size_image))
-            
+    def update(self):
+        self.count += 1
+        if self.count >= self.count_finish:
+            old_center = self.rect.center
+            self.image = random.choice(self.IMAGE["numbers"])
             self.rect = self.image.get_rect()
-        self.rect = self.image.get_rect()
-        self.x = x
-        self.y = y
-        self.rect.x = self.x
-        self.rect.y = self.y
-        self.number = number
-        self.Rect = pygame.Rect(self.x, self.y, GRID, GRID)
-        self.image_number = random.choice(IMAGE["numbers"])
-    def update(self): # size отвечает за изменения изображений
+            self.rect.center = old_center
+            self.count = 0
+            self.count_finish = random.randint(20, 40)
+            self.dirty = 1  # Помечаем как измененный
 
-        if VARIABLE["map"]["matrix"] == 1:
-            image = random.choice(IMAGE["numbers"])
-            self.image = pygame.transform.scale(image, (self.size_image, self.size_image))
-            
-            self.rect = self.image.get_rect()
-        elif VARIABLE["map"]["matrix"] == 2: 
-            self.image = pygame.Surface((self.size_image, self.size_image))
-            self.image.fill(self.color)
-
-        if game == False:self.kill()    #вышли из игры - удаляем спрайт
-
-
-
-
-class Turret_1(pygame.sprite.Sprite): # выделение
+class Turret_1(pygame.sprite.Sprite): 
     def __init__(self, number_grid):  
         pygame.sprite.Sprite.__init__(self)
         self.number_grid = number_grid
@@ -144,60 +183,72 @@ class Turret_1(pygame.sprite.Sprite): # выделение
         self.image = pygame.Surface((self.size_image_x, self.size_image_y))
         self.image.fill((200, 120, 0))
         self.rect = self.image.get_rect()
-        self.rect.x = MAPS[number_grid]["x"]
-        self.rect.y = MAPS[number_grid]["y"]
+        self.rect.x = number_grid[0] * GRID
+        self.rect.y = number_grid[1] * GRID
         self.time_s = 60 # через какое время может стрелять турэль
         self.time = 60
+
+        self.update_rate = 60  # Частота обновления (Гц)
+        self.update_interval = 1000.0 / 60  # Интервал в мс
+        
+        self.last_update = pygame.time.get_ticks()
+
+        self.direction = 1
     def update(self, keys):
-        if game == False or MAPS[self.number_grid]["sprites"] == False:self.kill()    #вышли из игры - удаляем спрайт
-        self.time += 1
-        if self.time >= self.time_s and keys[pygame.K_q]:
-            global all_sprites_bullet
-            bul = Bullet_1(self.rect.x, self.rect.y, mousex, mousey)
-            all_sprites_bullet.add(bul)
-            self.time = 0
+        current_time = pygame.time.get_ticks()
+        elapsed = current_time - self.last_update
+        
+        if elapsed >= self.update_interval:
+
+            if  MAPS[self.number_grid[0], self.number_grid[1]] != 2:self.kill()    #если нет в списке -> удаляем
+            self.time += 1
+            if self.time >= self.time_s and keys[pygame.K_q]:
+                global all_sprites_bullet
+                bul = Bullet_1(self.rect.x, self.rect.y, mousex, mousey, GRID)
+                all_sprites_bullet.add(bul)
+                self.time = 0
+            self.last_update = current_time
 
 
-class Window(pygame.sprite.Sprite): # окна
-    
-    def __init__(self,  number):
-        pygame.sprite.Sprite.__init__(self)
-        from main import MAPS
-        self.size_image = 25
-        self.image = pygame.Surface((self.size_image, self.size_image))
-        self.image.fill((114, 200, 244))
-        self.rect = self.image.get_rect()
-        self.number = number
 
-        self.rect.x = MAPS[self.number]["x"]
-        self.rect.y = MAPS[self.number]["y"]
-
-    def update(self): # size отвечает за изменения изображений
-
-
-        if game == False or MAPS[self.number]["sprites"] == False:self.kill()    #вышли из игры - удаляем спрайт
 
 
 class Spawn(pygame.sprite.Sprite): # спрайт спавна наших юнитов( распологается на краю карты)
-    def __init__(self):
+    def __init__(self, health):
 
         pygame.sprite.Sprite.__init__(self)
-        self.size_image = GRID*2
+        self.size_image = GRID*4
         self.image = pygame.Surface((self.size_image, self.size_image))
         self.image.fill((200, 120, 0))
         self.rect = self.image.get_rect()
-        self.rect.x = WIDTH//2 - GRID
-        self.rect.y = HEIGHT - GRID
+        self.rect.center = (Zom_x, Zom_y)
+        self.health = health
+        
 
-    def update(self, game): 
-        if game == False:self.kill()    #вышли из игры - удаляем спрайт
+        self.update_rate = 60  # Частота обновления (Гц)
+        self.update_interval = 1000.0 / 60  # Интервал в мс
+        
+        self.last_update = pygame.time.get_ticks()
+
+        self.direction = 1
+    def update(self, all_sprites_zobies):
+        current_time = pygame.time.get_ticks()
+        elapsed = current_time - self.last_update
+        
+        if elapsed >= self.update_interval:
+            if pygame.sprite.spritecollideany(self, all_sprites_zobies):
+                self.health -= 15
+            self.last_update = current_time
+
+
+
+
 
 
 def cret_new_game():
 
     
-    global MAPS, VARIABLE,  all_sprites_map, WAWE, VOLUME_TURRENT, VOLUME_WINDOW, GAME_ZOMBIE, OPT
-
+    global MAPS, VARIABLE,  all_sprites_map, WAWE, VOLUME_TURRENT, VOLUME_WINDOW, GAME_ZOMBIE, OPT, MAX_TURRENT, MAX_WINDOW, VICTORY
 
 
 
@@ -207,7 +258,7 @@ def cret_new_game():
             "isolation": False, # выделение
             "menu_game_1": False, # открытие/закрытие кнопок выход и т.п.
             "menu_game_2": False, # открытие/закрытие кнопок деврации и т.п.
-            "menu_game_3": False, # открытие/закрытие кнопок выбора интерьера(парты и т.д.)
+            
             "menu_game_4": False, # открыти/закрытие кнопок выбора строительства
             }  
 
@@ -215,38 +266,27 @@ def cret_new_game():
     WAWE = 0 # номер волны
     GAME_ZOMBIE = True # начали ли мы игру
     OPT = 0
-    MAPS = {} # словарь со значением о всех клетках на карте
+    MAPS = np.zeros((96, 50))   # двумерный массив numpy 
     all_sprites_map = pygame.sprite.Group()
-    x_f = 0
-    y_f = 0
-    counter = 0
-    for i in range(cell_count):
-        if counter >= WIDTH/GRID:   x_f, y_f, counter = 0, y_f + GRID, 0
-        color = random.choice([(0, 255, 0), (0, 250, 0), (0, 247, 0), (0, 243, 0)])
-        map = Map(x_f, y_f, str(i), color)
-        all_sprites_map.add(map)
-        
-        # добавляем блок в словарь
-        MAPS[str(i)] = {
-            "x": "",
-            "y": "",
-            "sprites": False, # есть ли тут что-то
-            "window":{"location": False},
-            "turrent_1":{"location": False}
-            }
-        MAPS[str(i)]["x"] = x_f
-        MAPS[str(i)]["y"] = y_f
 
-        x_f +=GRID # перемещаем на одну клетку
-        counter +=1
+    for x in range(96):
+        for y in range(50):
+            map = Map(x, y, WIDTH, GRID)
+            all_sprites_map.add(map)
+
 
 
 
     VOLUME_TURRENT = 0 # кол-во турелей
     VOLUME_WINDOW = 0 # кол-во окон
+
+    
+    VICTORY = False # на уровнях, выйграли или нет
+    MAX_TURRENT = 25 # максимальное количество вещей
+    MAX_WINDOW  = 25
     # создаём новые группы спрайтов
-    global   all_sprites_bullet, all_sprites_road
-    global all_sprites_wall, all_sprites_spawn, all_sprites_window, all_sprites_zobies, all_sprites_turent
+    global  all_sprites_bullet
+    global  all_sprites_spawn, all_sprites_window, all_sprites_zobies, all_sprites_turent
 
 
     all_sprites_window = pygame.sprite.Group()
@@ -257,7 +297,7 @@ def cret_new_game():
     all_sprites_bullet = pygame.sprite.Group() # снаряды
     all_sprites_turent = pygame.sprite.Group() # турели 
     global spawn
-    spawn = Spawn()
+    spawn = Spawn(5000)
     all_sprites_spawn.add(spawn)
     z = Zombie_1()
     all_sprites_zobies.add(z)
@@ -271,14 +311,16 @@ def help():
             "Враги всегда идут в одно место.",
             "Мало зомби? Просто нажми F2.",
             "Удачи"]
+    pygame.draw.rect(screen, (196, 241, 149, 10), (GRID * 19, 10, GRID * 55, GRID * 17))
+    i = 1
+    for  line in text:
+        text_surface = f1.render(line, True, (10, 10, 10))
+        screen.blit(text_surface, (GRID * 20, GRID * i))
+        i += 2
 
-    for i, line in enumerate(text):
-        text_surface = f1.render(line, True, (255, 255, 255))
-        screen.blit(text_surface, (0, i * 36))
 
-
-# курсор, вдруг что-то взяли
-arrow = sprite_build.Arrow()
+# курсор
+arrow = Arrow()
 all_sprites_arrow = pygame.sprite.Group();  all_sprites_arrow.add(arrow)
 
 
@@ -289,27 +331,18 @@ def open_game_menu_1():
     else: VARIABLE["menu_game_1"] = True
 
 
-
 button_1_game = Button_2(WIDTH//1.07, HEIGHT//1.13,  open_game_menu_1)
 
 
-
-
-
-def menu_turrent_turrent_1(): 
-    global OPT
-    OPT = "turret_1"
-button_open_turrent_1 = Button_2(WIDTH//3.5, HEIGHT//1.07,  menu_turrent_turrent_1, "турели", True)
+button_open_turrent_1 = Button_2(WIDTH//3.5, HEIGHT//1.07, None, "турели", True)
 
 
 
 all_sprites_decoration_btn = pygame.sprite.Group()
 
 
-def open_game_menu_window(): global OPT; OPT = "window"
-button_open_window = Button_2(WIDTH//2.9, HEIGHT//1.07,  open_game_menu_window, "битое стекло", True)
+button_open_window = Button_2(WIDTH//2.9, HEIGHT//1.07,  None, "битое стекло", True)
 
-# открытие меню выбора интерьера
 
 
 all_sprites_menu_game = pygame.sprite.Group()
@@ -318,21 +351,17 @@ all_sprites_menu_game.add(button_1_game,   button_open_turrent_1,  button_open_w
 
 
 
-
-
-def save_game():    save_loading_game.save_game() #*сохранение игры
-
-def stop_game():
+def stop_game():    #! глобальная переменная
     global game; game = False
 def full_stop_game(): sys.exit()#* Закрываем игру
-btn_1_game = Button_1(WIDTH//2, HEIGHT//1.1 ,WIDTH//10 , HEIGHT//13 ,obj_btn_1,"сохранить макет", save_game,30);obj_btn_1 = btn_1_game.loading_lis()    # ЗАБИРАЕМ СПИСОК
+
 
 btn_2_game = Button_1(WIDTH//1.5, HEIGHT//1.1 ,WIDTH//10 , HEIGHT//13 ,obj_btn_1,"выйти в меню", stop_game, 30 );obj_btn_1 = btn_2_game.loading_lis()    # ЗАБИРАЕМ СПИСОК
 
 btn_3_game = Button_1(WIDTH//1.2, HEIGHT//1.1 ,WIDTH//10 , HEIGHT//13 ,obj_btn_1,"рабочий стол", full_stop_game, 30);obj_btn_1 = btn_3_game.loading_lis()    # ЗАБИРАЕМ СПИСОК
 
 
-surf = pygame.Surface((WIDTH, 90))
+surf = pygame.Surface((WIDTH, GRID*5))
 
 # прозрачная поверхность на главном меню, чтоб фон глаза не резал
 surf_m = pygame.Surface((WIDTH, HEIGHT))
@@ -340,219 +369,358 @@ surf_m = pygame.Surface((WIDTH, HEIGHT))
 
 
 # кнопки в главном меню с текстом
-def run_game(): 
+def run_game(level): 
+    
     cret_new_game() # создаём поле
-    global game
+    global game, LEVEL
     game = True
+    LEVEL = level
 
-btn_1_menu = Button_1(WIDTH//2, HEIGHT//2 ,WIDTH//9 , HEIGHT//13 ,obj_btn_2,"новая игра", run_game);   obj_btn_2 = btn_1_menu.loading_lis()    # ЗАБИРАЕМ СПИСОК
+btn_1_menu = Button_1(WIDTH//2, HEIGHT//2 ,WIDTH//9 , HEIGHT//13 ,obj_btn_2,"бесконечность", lambda: (run_game(0)), 27);   obj_btn_2 = btn_1_menu.loading_lis()    # ЗАБИРАЕМ СПИСОК
 # кнопки в главном меню с текстом
-def loading_game():  #* загрузка игры
-    try:
-        global MAPS, VOLUME_TURRENT, VOLUME_WINDOW, game, all_sprites_window, all_sprites_turent
-        file = save_loading_game.loading_game() #* загрузка игры
-        cret_new_game()
 
-        MAPS_op = file["MAPS"]
-        for i in range(cell_count):
-
-            if MAPS_op[str(i)]["sprites"] == True:
-                if MAPS_op[str(i)]["window"]["location"] == True: # если есть окно
-                    win = Window(str(i))
-                    all_sprites_window.add(win)
-                    MAPS[str(i)]["sprites"] = True
-                    MAPS[str(i)]["window"]["location"] = True
-                elif MAPS_op[str(i)]["turret_1"]["location"] == True: # если есть турель
-                    tur = Turret_1(str(i))
-                    all_sprites_turent.add(tur)
-                    MAPS[str(i)]["sprites"] = True
-                    MAPS[str(i)]["turrent_1"]["location"] = True
-        VOLUME_TURRENT = file["VOLUME_TURRENT"] # количество турелей
-        VOLUME_WINDOW = file["VOLUME_WINDOW"] # количество окон
-        game = True # запускаем игру
-
-    except: pass # можем не загрузить, а просто закрыть из-за этого вылетет ошибка
-
-btn_2_menu = Button_1(WIDTH//2, HEIGHT//1.7 ,WIDTH//9 , HEIGHT//13 ,obj_btn_2,"загрузить макет", loading_game,30 );obj_btn_2 = btn_2_menu.loading_lis()    # ЗАБИРАЕМ СПИСОК
-def setting_game(): set.setting() #* открываем настройки
-
-btn_3_menu = Button_1(WIDTH//3, HEIGHT//2 ,WIDTH//9 , HEIGHT//13 ,obj_btn_2, "настройки", setting_game);   obj_btn_2 = btn_3_menu.loading_lis()    # ЗАБИРАЕМ СПИСОК
-def exit_game(): sys.exit() #* выход из игры
-
-btn_4_menu = Button_1(WIDTH//3, HEIGHT//1.7 ,WIDTH//9 , HEIGHT//13 ,obj_btn_2,"выход", exit_game); obj_btn_2 = btn_4_menu.loading_lis()    # ЗАБИРАЕМ СПИСОК
 
 def help_game():
     global help_open
     if help_open == True: help_open = False
     else: help_open = True #* открытие окна помощи
-btn_5_menu = Button_1(WIDTH//100, HEIGHT//1.2 ,WIDTH//12 , HEIGHT//15 ,obj_btn_2,"помощь", help_game); obj_btn_2 = btn_4_menu.loading_lis()
+
+btn_2_menu = Button_1(WIDTH//2, HEIGHT//1.7 ,WIDTH//9 , HEIGHT//13 ,obj_btn_2,"помощь", help_game);obj_btn_2 = btn_2_menu.loading_lis()    # ЗАБИРАЕМ СПИСОК
+def setting_game(): set.setting() #* открываем настройки
+
+btn_3_menu = Button_1(WIDTH//3, HEIGHT//2 ,WIDTH//9 , HEIGHT//13 ,obj_btn_2, "настройки", setting_game);   obj_btn_2 = btn_3_menu.loading_lis()    # ЗАБИРАЕМ СПИСОК
+
+def exit_game(): sys.exit() #* выход из игры
+
+btn_4_menu = Button_1(WIDTH//3, HEIGHT//1.7 ,WIDTH//9 , HEIGHT//13 ,obj_btn_2,"выход", exit_game); obj_btn_2 = btn_4_menu.loading_lis()    # ЗАБИРАЕМ СПИСОК
+
+
+
+
+
+def level_game(): 
+    global level_open
+    if level_open == True: level_open = False
+    else: level_open = True #* открытие окна уровней
+btn_6_menu = Button_1(WIDTH//1.2, HEIGHT//1.2 ,WIDTH//12 , HEIGHT//15 ,obj_btn_2,"уровни", level_game); obj_btn_2 = btn_6_menu.loading_lis()
+
+
 set.setting_error() #! используется для предотвращения потери переменной при открытии настроек или окна сохранить игру, х.з. почему
 
 help_open = False # открыли ли мы окно помощи
+level_open = False # открыли ли мы окно уровней
+
+all_sprites_matrix = pygame.sprite.Group()
+
+def matrix(all_sprites_matrix):
+    x_f = 0
+    y_f = 0
+    counter = 0
+    for i in range(1296):     # создание матрицы на главном
+        if counter >= 48:   x_f, y_f, counter = 0, y_f + GRID*2, 0
+
+        map = Matrix(x_f, y_f, IMAGE)
+        all_sprites_matrix.add(map)
+
+        x_f +=GRID*2 # перемещаем на одну клетку
+        counter +=1
+    return all_sprites_matrix
+
+all_sprites_matrix = matrix(all_sprites_matrix)
+
+def endless_mode_render(screen):    # отрисовка
+    all_sprites_map.draw(screen)
+    all_sprites_spawn.draw(screen)
+
+    all_sprites_window.draw(screen)
+    all_sprites_turent.draw(screen)
+    all_sprites_zobies.draw(screen)
+    all_sprites_bullet.draw(screen)
+
+def endless_mode_update_sprites():  # обновление спрайтов
+    all_sprites_map.update()
+    all_sprites_spawn.update(all_sprites_zobies)
+    all_sprites_turent.update(keys)
+    all_sprites_zobies.update(all_sprites_window, all_sprites_bullet)
+    all_sprites_bullet.update(all_sprites_zobies, GRID, WIDTH, HEIGHT)
+    
+    
+# очищаем группы спрайтов
+def clear_sprites_group(all_sprites_map, all_sprites_window, all_sprites_spawn, all_sprites_turent, all_sprites_zobies,all_sprites_bullet):
+    for sprite in all_sprites_map:
+        sprite.kill()
+        del sprite
+    for sprite in all_sprites_window:
+        sprite.kill()
+        del sprite
+    for sprite in all_sprites_spawn:
+        sprite.kill()
+        del sprite
+    for sprite in all_sprites_turent:
+        sprite.kill()
+        del sprite
+    for sprite in all_sprites_zobies:
+        sprite.kill()
+        del sprite
+    for sprite in all_sprites_bullet:
+        sprite.kill()
+        del sprite
+
+
+    return all_sprites_map, all_sprites_window, all_sprites_spawn, all_sprites_turent, all_sprites_zobies,all_sprites_bullet
+
+class Create_zombie():
+    @staticmethod
+    def new_wawe(all_sprites_zobies):
+        if LEVEL == 0:
+            if WAWE > 2:
+                
+                for i in range(random.randint(0, WAWE)):
+                    zomb = Zombie_3()
+                    all_sprites_zobies.add(zomb)
+                for i in range(random.randint(0, WAWE)):
+                    zomb = Zombie_2()
+                    all_sprites_zobies.add(zomb)
+            if WAWE > 5:
+                rn = random.randint(0, WAWE)
+                for i in range(rn):
+                    zomb = Zombie_4()
+                    all_sprites_zobies.add(zomb)
+            if WAWE > 0:
+                for i in range(random.randint(0, WAWE**2)):
+                    zomb = Zombie_2()
+                    all_sprites_zobies.add(zomb)
+            
+        elif LEVEL == 1: 
+            enemy = [Zombie_1, Zombie_2, Zombie_3]
+            for i in range(int(WAWE**1.5)):
+                zomb = random.choice(enemy)()
+                all_sprites_zobies.add(zomb)
+        
+        elif LEVEL == 2: 
+            for i in range(int(WAWE**1.5)):
+                zomb = random.choice([Zombie_1, Zombie_2])()
+                all_sprites_zobies.add(zomb)
+            for i in range(WAWE):
+                zomb = random.choice([Zombie_3, Zombie_4])()
+                all_sprites_zobies.add(zomb)
+
+        return all_sprites_zobies
+
+surferlevel = SurferLevel(GRID, screen)
+
+clicking = 0
+
+
+
+if os.path.exists("no_video.txt"):  # TODO выключение заставки при разработке, в будущем будет перенесено в настройки
+    for number in range(1, len(os.listdir("./image/intro"))):
+        for event in pygame.event.get():
+            
+            # check for closing window
+            if event.type == pygame.QUIT: pygame.quit()
+        im = pygame.image.load(f"./image/intro/({number}).jpg").convert()
+        im = pygame.transform.scale(im, (WIDTH, HEIGHT))
+        clock.tick(30)
+        screen.blit(im, (0, 0)) # фон 
+        pygame.display.flip()  # Добавлен update экрана
+    while True:
+        for event in pygame.event.get():
+            # check for closing window
+            if event.type == pygame.QUIT: pygame.quit()
+        if pygame.mouse.get_pressed()[0] : break  #TODO ждём пока пользователь не дочитает
+        screen.fill((237, 28, 36))
+        screen.blit(f1.render("Нажми на курсор.", True, (180, 0, 0)), (GRID*40 , GRID))
+        screen.blit(f1.render("Всё будет хорошо.", True, (180, 0, 0)), (GRID , GRID*4))
+        screen.blit(f1.render("Они уже здесь.", True, (180, 0, 0)), (GRID*10 , GRID*40))
+        screen.blit(f1.render("«В одиночестве есть своя очень странная красота». — Лив Тайлер", True, (180, 0, 0)), (GRID*20 , GRID*10))
+        
+        screen.blit(f1.render("«Вчера я был умным, поэтому я хотел изменить мир. Сегодня я мудр, поэтому меняюсь я сам» — Майя Энджелоу", True, (180, 0, 0)), (GRID*10 , GRID*20))
+        screen.blit(f1.render("«Я стала замечать гравитацию ещё в детстве» — Камерон Диаз", True, (180, 0, 0)), (GRID*20 , GRID*30))
+        screen.blit(f1.render("«Спокойные люди имеют самые громкие мысли». — Стивен Хокинг", True, (180, 0, 0)), (GRID*40 , GRID*40))
+        pygame.display.flip()
+
+
+
+
+
+
+
 
 # Цикл игры
 running = True
 while running:
+    
     mousex, mousey = pygame.mouse.get_pos() # курсор
     keys = pygame.key.get_pressed() # другой метод обработки нажатий
     # Держим цикл на правильной скорости
-    clock.tick(FPS)
+
+    dt = clock.tick(FPS) / 1000.0            # Разница во времени между кадрами (dt)
+    
     # Ввод процесса (события)
     for event in pygame.event.get():
+        
         # check for closing window
         if event.type == pygame.QUIT:   running = False
+        if level_open == True :
+            surferlevel.process(event, LEVEL)
+            level_open = surferlevel.is_exit_pressed()
+            
+            if surferlevel.is_level_pressed != False:
+                LEVEL = surferlevel.is_level_pressed()
+                if LEVEL != False: 
+                    level_open = False
+                    run_game(LEVEL)
 
 
         if pygame.mouse.get_pressed()[0] and game == True:
+            if (VOLUME_TURRENT < MAX_TURRENT or VOLUME_WINDOW < MAX_WINDOW):#TODO c каждой волной повышаем допустимое значение
+                if OPT == 1:
+                    if VOLUME_TURRENT < MAX_TURRENT:  #TODO c каждой волной повышаем допустимое значение
+                        number_sp = grids_config(MAPS, GRID, mousex, mousey)
+                        if number_sp:
+                            if MAPS[number_sp[0]][number_sp[1]] == 0: 
 
-            if OPT == "turret_1":
-                number_sp = option.grids_config()
-
-                if MAPS[number_sp]["sprites"] == True: pass # если на клетке уже есть  спрайт - ничего не делаем
-                else:
-                    if VOLUME_TURRENT < 15:
-                        player = Turret_1(number_sp)
-                        MAPS[number_sp]["turret_1"] = {"location": True}
-                        all_sprites_turent.add(player)
-                        VOLUME_TURRENT += 1
-                        MAPS[number_sp]["sprites"] = True
-
-            elif OPT == "window":
-                number_sp = option.grids_config()
-                if  MAPS[number_sp]["sprites"] ==  True: pass # если на клетке уже есть  спрайт - ничего не делаем
-                else:
-                    if VOLUME_WINDOW < 25:
-                        win = Window(number_sp)
-                        MAPS[number_sp]["window"] = {"location": True}
-                        all_sprites_window.add(win)
-                        VOLUME_WINDOW +=1
-                        MAPS[number_sp]["sprites"] = True
+                                player = Turret_1(number_sp)
+                                MAPS[number_sp[0], number_sp[1]] = 2
+                                all_sprites_turent.add(player)
+                                VOLUME_TURRENT += 1
 
 
+                elif OPT == 2:
+                    if VOLUME_WINDOW < MAX_WINDOW:
+                        number_sp = grids_config(MAPS, GRID, mousex, mousey)
+                        if number_sp:
+                            if MAPS[number_sp[0]][number_sp[1]] == 0:  # если на клетке уже есть  спрайт - ничего не делаем
+
+                                win = Window(number_sp, GRID)
+                                MAPS[number_sp[0], number_sp[1]] = 3
+                                all_sprites_window.add(win)
+                                VOLUME_WINDOW += 1
+
+            if game == True:
+                # выбираем турели
+                if button_open_turrent_1.rect.collidepoint(mousex, mousey): 
+                    OPT = 1
+                elif button_open_window.rect.collidepoint(mousex, mousey): 
+                    OPT = 2
 
 
 
-    if game == True:
+
+    if game == True: 
         if GAME_ZOMBIE == True:
             if keys[pygame.K_DELETE]: # удаление объекта
-                number_sp = option.grids_config()
-                if MAPS[number_sp]["turrent_1"]["location"] == True: VOLUME_TURRENT -=1
-                elif MAPS[number_sp]["window"]["location"] == True: VOLUME_WINDOW -=1
-                MAPS[number_sp]["sprites"] = False
-                MAPS[number_sp]["turret_1"] = {"location": False}
-                MAPS[number_sp]["window"] = {"location": False}
+                number_sp = grids_config(MAPS, GRID, mousex, mousey)
+                
+                if MAPS[number_sp[0], number_sp[1]] == 2: VOLUME_TURRENT -=1; MAPS[number_sp[0], number_sp[1]] = 0
+                elif MAPS[number_sp[0], number_sp[1]] == 3: VOLUME_WINDOW -=1; MAPS[number_sp[0], number_sp[1]] = 0
+
+
+                all_sprites_window.update(MAPS)
 
 
             # Обновление
-            all_sprites_map.update()
-
-            all_sprites_window.update()
-
-            all_sprites_turent.update(keys)
-            all_sprites_zobies.update()
-            all_sprites_bullet.update(keys)
+            endless_mode_update_sprites()
             # Рендеринг
 
-        # Рендеринг
 
+            endless_mode_render(screen)
 
+            all_sprites_arrow.update(grids_config, OPT, screen, GRID, MAPS, VOLUME_WINDOW, VOLUME_TURRENT, WAWE, mousex, mousey)    #* что у нас на курсоре
 
-            all_sprites_map.draw(screen)
-
-            all_sprites_window.draw(screen)
-            all_sprites_spawn.draw(screen)
-            all_sprites_turent.draw(screen)
-            all_sprites_zobies.draw(screen)
-            all_sprites_bullet.draw(screen)
-            all_sprites_arrow.update()
-
-
-        
-
-
-            # отсылка на матрицу
-            if keys[pygame.K_F1]: 
-                VARIABLE["map"]["matrix"] = 1
-                all_sprites_map.update()
-                VARIABLE["map"]["matrix"] = 0
-            else: VARIABLE["map"]["matrix"] = 0
-            if keys[pygame.K_F5]: # выкл. эффект матрицы
-                VARIABLE["map"]["matrix"] = 2 
-                all_sprites_map.update()
-                VARIABLE["map"]["matrix"] = 0
             
-            if keys[pygame.K_ESCAPE]: lbl = 0; OPT = ""; OPTCURSOR = "" #заменяем переменную
+            if keys[pygame.K_ESCAPE]: lbl = 0; OPT = 0; OPTCURSOR = "" #заменяем переменную
 
             if str(all_sprites_zobies) == "<Group(0 sprites)>": 
-
-                for i in range(10): 
-                    zomb = Zombie_1()
-                    all_sprites_zobies.add(zomb)
-
-                    rn = random.randint(0, WAWE**2)
-
-                    for i in range(rn):
-                        zomb = Zombie_2()
-                        all_sprites_zobies.add(zomb)
-                if WAWE > 5:
-                    rn = random.randint(0, WAWE)
-                    for i in range(rn):
-                        zomb = Zombie_3()
-                        all_sprites_zobies.add(zomb)
-                if WAWE > 10:
-                    rn = random.randint(0, WAWE)
-                    for i in range(rn):
-                        zomb = Zombie_4()
-                        all_sprites_zobies.add(zomb)
+                all_sprites_zobies = Create_zombie.new_wawe(all_sprites_zobies)
                 WAWE += 1
+                MAX_TURRENT +=1
+                MAX_WINDOW += 1
 
-            if pygame.sprite.spritecollide(spawn, all_sprites_zobies, False): GAME_ZOMBIE = False ; print(9999)# мы проиграли
-            if keys[pygame.K_F2]: 
+            if spawn.health <= 0:   #* Завершение игры
+                GAME_ZOMBIE = False 
+                (   all_sprites_map, all_sprites_window,    #* выдаёт пустые группы
+                    all_sprites_spawn, all_sprites_turent,
+                    all_sprites_zobies,all_sprites_bullet) = clear_sprites_group(
+                        all_sprites_map, all_sprites_window,
+                        all_sprites_spawn, all_sprites_turent,
+                        all_sprites_zobies,all_sprites_bullet)
+            
+            elif WAWE > 10 and LEVEL != 0: #*если не на уровнях -> завершаем игру
+                VICTORY = True
+                GAME_ZOMBIE = False 
+                SAVE["level"][f'{LEVEL}'] = True
+                LEVEL = False
+                save_game(SAVE)
+            if keys[pygame.K_F2]: #? если очень хочется, можно создать ещё зомби
                 zomb = Zombie_2()
                 all_sprites_zobies.add(zomb)
 
-            wawe_text = f1.render(str(WAWE), True,     (180, 0, 0))
-            screen.blit(wawe_text, (10, HEIGHT//7))
+            
+            screen.blit(f1.render(f'Волна: {WAWE}', True, (180, 0, 0)), (10, GRID*5))
+
+            screen.blit(f1.render(f'Доступно битых окон: {MAX_WINDOW - VOLUME_WINDOW}', True, (180, 0, 0)), (10, GRID*7))
+
+            screen.blit(f1.render(f'Доступно орудий: {MAX_TURRENT - VOLUME_TURRENT}', True, (180, 0, 0)), (10, GRID*9))
+            screen.blit(f1.render(f'Здоровье: {spawn.health}', True, (180, 0, 0)), (10, GRID*11))
+
+        elif VICTORY:
+            pygame.draw.rect(screen, (64, 128, 255), (0, 0, WIDTH, HEIGHT))
+            screen.blit(f1.render("Победа!!!", True, (180, 0, 0)), (WIDTH//2, HEIGHT//2))
+            VARIABLE["menu_game_1"] = True
         else:
-            for i in range(10):
-                pygame.draw.rect(screen, (64, 128, 255), (0, 0, WIDTH, HEIGHT), i)
-                wawe_text = f1.render("Ты проиграл!", True, (180, 0, 0))
-                screen.blit(wawe_text, (WIDTH//2, HEIGHT//2))
-                wawe_text = f1.render("Вы можете сохранить игру и запустить в режиме мекета!", True, (180, 0, 0))
-                screen.blit(wawe_text, (WIDTH//2, HEIGHT//1.5))
-        surf.fill(BLACK)  # Заполнение фона, цвет
+            pygame.draw.rect(screen, (64, 128, 255), (0, 0, WIDTH, HEIGHT))
+            wawe_text = f1.render("Ты проиграл!", True, (180, 0, 0))
+            screen.blit(wawe_text, (WIDTH//2, HEIGHT//2))
+            VARIABLE["menu_game_1"] = True
 
-        surf.set_alpha(100)# прозрачность
 
-        screen.blit(surf, (0, HEIGHT-  90))
-        if VARIABLE["menu_game_1"] == True:
+
+        surf.fill(RED)  # Заполнение фона, цвет
+
+
+        screen.blit(surf, (0, HEIGHT- 90))
+        if VARIABLE["menu_game_1"]:
             for object in obj_btn_1:  object.process()
-        
+
         # обнолвляем и выводим кнопки в одном месте
         all_sprites_menu_game.draw(screen)
         all_sprites_menu_game.update()
-        if VARIABLE["menu_game_2"] == True:
+        if VARIABLE["menu_game_2"]:
             all_sprites_decoration_btn.draw(screen)
             all_sprites_decoration_btn.update()
+
+
+
+
     else: # если не играем
-        screen.blit(IMAGE["background"]["main"],(0,0))
+
+        all_sprites_matrix.update()
+        changed_rects = all_sprites_matrix.draw(screen)
+        pygame.display.update(changed_rects)  # Обновляем только измененные области
         surf_m.fill(BLACK)  # Заполнение фона, цвет
 
         surf_m.set_alpha(100)# прозрачность
-        
+
         screen.blit(surf_m, (0, 0))
-        for object in obj_btn_2:  object.process()  # рисуем кнопки
-        if help_open == True: help()
+        if level_open == True: surferlevel.render(screen, dt)
+        else:
+            for object in obj_btn_2:  object.process()  # рисуем кнопки
+            if help_open == True: help()
+
 
     if CONFIG["FPS_see"] == True:
-        fps = clock.get_fps()
-        fps_text = f1.render(str(int(fps)), True,     (180, 0, 0))
-        screen.blit(fps_text, (10, 10))
-    if keys[pygame.K_F7]: FPS = 120
-    if keys[pygame.K_F8]: FPS = 60
 
+        fps_text = f1.render(f"fps: {int(clock.get_fps())}", True, (180, 0, 0))
+        screen.blit(fps_text, (10, 10))
+    if keys[pygame.K_F7]: FPS = 200
+    if keys[pygame.K_F8]: FPS = 60
+    if keys[pygame.K_F6]: print(all_sprites_zobies)
+    if keys[pygame.K_F1]: WAWE = 10
     pygame.display.flip()   # обновляем все поверхности
 
 
-pygame.quit()
 
+pygame.quit()
+sys.exit()
