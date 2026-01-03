@@ -5,33 +5,34 @@ import json
 import sys
 import os
 
-import toml  # файл конфигурации
+
 import numpy as np
 
 
 
 # мои коды
-import set
-from menu import Button_1, Button_2 # мои кнопки прочее
+
+from game_ui.menu import Button_1, Button_2 # мои кнопки прочее
 
 
-from level import SurferLevel
-from option import grids_config, img, resetting_progress, loading_game, save_game
+from game_ui.level import SurferLevel
+from game_ui.set import SurferSetting
+
+
+from game_ui.option import grids_config, img
 from sprites.arrow import Arrow# спрайты различных построек
 from sprites.map import Map
 from sprites.window import Window
 from sprites.bullet import Bullet_1 # класс для выстрелов
-
+from data.data import Data
 
 # спрайты зомби в папке zombies
 from sprites.zombie_1 import Zombie_1, Zombie_2, Zombie_3, Zombie_4
 
 
 
-with open('config.toml', 'r') as f:  
-    DATA = toml.load(f)  
 
-SAVE = loading_game()
+DATA = Data()
 
 # кол-во клеток
 cell_count = 4800 # 96 x 50
@@ -41,18 +42,10 @@ grid_y = 0
 
 
 
-try:
-    with open('setting.json', 'r',encoding='utf-8') as json_file:
-        CONFIG = json.load(json_file)
-except FileNotFoundError:
-    CONFIG = {      # настройки
-            "FPS_see": True, # отображение фпс
-            "matrix": False, # сетка
-            "resolution": "auto", # разрешение экрана
-            }  
+CONFIG = DATA.SETTING 
 
 if CONFIG["resolution"] == "auto":
-    geom_disp = ctypes.windll.user32 # получаем разрешение монитора
+    geom_disp = ctypes.windll.user32 #* получаем разрешение монитора
     geom_disp.SetProcessDPIAware()
     WIDTHS = geom_disp.GetSystemMetrics(0) # ширина
     HEIGHTS = geom_disp.GetSystemMetrics(1) # высота
@@ -77,7 +70,7 @@ else:   #* в любом случае выбираем это, так же эт�
     HEIGHT = 918
     
 
-FPS = DATA['game']['FPS']
+FPS = DATA.SETTING['FPS_max']
 GRID = WIDTH//96
 
 GAME_HEIGHT = HEIGHT - GRID * 4
@@ -100,6 +93,7 @@ pygame.display.set_caption("Enemy fan")
 clock = pygame.time.Clock()
 
 f1 = pygame.font.Font(None, 36)
+
 mousex, mousey = pygame.mouse.get_pos() # курсор
 
 #сетка
@@ -299,7 +293,7 @@ def cret_new_game():
     global spawn
     spawn = Spawn(5000)
     all_sprites_spawn.add(spawn)
-    z = Zombie_1()
+    z = Zombie_1(GRID, DATA, IMAGE)
     all_sprites_zobies.add(z)
 
 
@@ -386,7 +380,9 @@ def help_game():
     else: help_open = True #* открытие окна помощи
 
 btn_2_menu = Button_1(WIDTH//2, HEIGHT//1.7 ,WIDTH//9 , HEIGHT//13 ,obj_btn_2,"помощь", help_game);obj_btn_2 = btn_2_menu.loading_lis()    # ЗАБИРАЕМ СПИСОК
-def setting_game(): set.setting() #* открываем настройки
+def setting_game(): # TODO открытие настроек
+    global setting_open
+    setting_open = not setting_open
 
 btn_3_menu = Button_1(WIDTH//3, HEIGHT//2 ,WIDTH//9 , HEIGHT//13 ,obj_btn_2, "настройки", setting_game);   obj_btn_2 = btn_3_menu.loading_lis()    # ЗАБИРАЕМ СПИСОК
 
@@ -405,10 +401,10 @@ def level_game():
 btn_6_menu = Button_1(WIDTH//1.2, HEIGHT//1.2 ,WIDTH//12 , HEIGHT//15 ,obj_btn_2,"уровни", level_game); obj_btn_2 = btn_6_menu.loading_lis()
 
 
-set.setting_error() #! используется для предотвращения потери переменной при открытии настроек или окна сохранить игру, х.з. почему
 
 help_open = False # открыли ли мы окно помощи
 level_open = False # открыли ли мы окно уровней
+setting_open = False # открыты ли настройки
 
 all_sprites_matrix = pygame.sprite.Group()
 
@@ -476,49 +472,50 @@ class Create_zombie():
             if WAWE > 2:
                 
                 for i in range(random.randint(0, WAWE)):
-                    zomb = Zombie_3()
+                    zomb = Zombie_3(GRID, DATA, IMAGE)
                     all_sprites_zobies.add(zomb)
                 for i in range(random.randint(0, WAWE)):
-                    zomb = Zombie_2()
+                    zomb = Zombie_2(GRID, DATA, IMAGE)
                     all_sprites_zobies.add(zomb)
             if WAWE > 5:
                 rn = random.randint(0, WAWE)
                 for i in range(rn):
-                    zomb = Zombie_4()
+                    zomb = Zombie_4(GRID, DATA, IMAGE)
                     all_sprites_zobies.add(zomb)
             if WAWE > 0:
                 for i in range(random.randint(0, WAWE**2)):
-                    zomb = Zombie_2()
+                    zomb = Zombie_2(GRID, DATA, IMAGE)
                     all_sprites_zobies.add(zomb)
             
         elif LEVEL == 1: 
             enemy = [Zombie_1, Zombie_2, Zombie_3]
             for i in range(int(WAWE**1.5)):
-                zomb = random.choice(enemy)()
+                zomb = random.choice(enemy)(GRID, DATA, IMAGE)
                 all_sprites_zobies.add(zomb)
         
         elif LEVEL == 2: 
             for i in range(int(WAWE**1.5)):
-                zomb = random.choice([Zombie_1, Zombie_2])()
+                zomb = random.choice([Zombie_1, Zombie_2])(GRID, DATA, IMAGE)
                 all_sprites_zobies.add(zomb)
             for i in range(WAWE):
-                zomb = random.choice([Zombie_3, Zombie_4])()
+                zomb = random.choice([Zombie_3, Zombie_4])(GRID, DATA, IMAGE)
                 all_sprites_zobies.add(zomb)
 
         return all_sprites_zobies
-
-surferlevel = SurferLevel(GRID, screen)
+# TODO классы менюшек(выбора уровня, настроек)
+surferlevel = SurferLevel(GRID) 
+surfersetting = SurferSetting(GRID, DATA) 
 
 clicking = 0
 
 
 
-if os.path.exists("no_video.txt"):  # TODO выключение заставки при разработке, в будущем будет перенесено в настройки
-    for number in range(1, len(os.listdir("./image/intro"))):
+if DATA.SETTING['intro']:   
+    for number in range(1, len(os.listdir("./image/intro"))):   # TODO заставка
         for event in pygame.event.get():
             
             # check for closing window
-            if event.type == pygame.QUIT: pygame.quit()
+            if event.type == pygame.QUIT: pygame.quit(); sys.exit()
         im = pygame.image.load(f"./image/intro/({number}).jpg").convert()
         im = pygame.transform.scale(im, (WIDTH, HEIGHT))
         clock.tick(30)
@@ -529,22 +526,16 @@ if os.path.exists("no_video.txt"):  # TODO выключение заставки
             # check for closing window
             if event.type == pygame.QUIT: pygame.quit()
         if pygame.mouse.get_pressed()[0] : break  #TODO ждём пока пользователь не дочитает
-        screen.fill((237, 28, 36))
-        screen.blit(f1.render("Нажми на курсор.", True, (180, 0, 0)), (GRID*40 , GRID))
-        screen.blit(f1.render("Всё будет хорошо.", True, (180, 0, 0)), (GRID , GRID*4))
-        screen.blit(f1.render("Они уже здесь.", True, (180, 0, 0)), (GRID*10 , GRID*40))
-        screen.blit(f1.render("«В одиночестве есть своя очень странная красота». — Лив Тайлер", True, (180, 0, 0)), (GRID*20 , GRID*10))
+        screen.fill((191, 0, 1))
+        screen.blit(f1.render("Нажми на курсор.", True, (169, 218, 227)), (GRID*40 , GRID))
+        screen.blit(f1.render("Всё будет хорошо.", True, (169, 218, 227)), (GRID , GRID*4))
+        screen.blit(f1.render("Они уже здесь.", True, (169, 218, 227)), (GRID*10 , GRID*40))
+        screen.blit(f1.render("«В одиночестве есть своя очень странная красота». — Лив Тайлер", True, (169, 218, 227)), (GRID*20 , GRID*10))
         
-        screen.blit(f1.render("«Вчера я был умным, поэтому я хотел изменить мир. Сегодня я мудр, поэтому меняюсь я сам» — Майя Энджелоу", True, (180, 0, 0)), (GRID*10 , GRID*20))
-        screen.blit(f1.render("«Я стала замечать гравитацию ещё в детстве» — Камерон Диаз", True, (180, 0, 0)), (GRID*20 , GRID*30))
-        screen.blit(f1.render("«Спокойные люди имеют самые громкие мысли». — Стивен Хокинг", True, (180, 0, 0)), (GRID*40 , GRID*40))
+        screen.blit(f1.render("«Вчера я был умным, поэтому я хотел изменить мир. Сегодня я мудр, поэтому меняюсь я сам» — Майя Энджелоу", True, (169, 218, 227)), (GRID*10 , GRID*20))
+        screen.blit(f1.render("«Я стала замечать гравитацию ещё в детстве» — Камерон Диаз", True, (169, 218, 227)), (GRID*20 , GRID*30))
+        screen.blit(f1.render("«Спокойные люди имеют самые громкие мысли». — Стивен Хокинг", True, (169, 218, 227)), (GRID*40 , GRID*40))
         pygame.display.flip()
-
-
-
-
-
-
 
 
 # Цикл игры
@@ -562,7 +553,7 @@ while running:
         
         # check for closing window
         if event.type == pygame.QUIT:   running = False
-        if level_open == True :
+        if level_open:
             surferlevel.process(event, LEVEL)
             level_open = surferlevel.is_exit_pressed()
             
@@ -571,6 +562,9 @@ while running:
                 if LEVEL != False: 
                     level_open = False
                     run_game(LEVEL)
+        if setting_open == True:
+            surfersetting.process(event)
+            setting_open = surfersetting.is_exit_pressed()
 
 
         if pygame.mouse.get_pressed()[0] and game == True:
@@ -650,11 +644,11 @@ while running:
             elif WAWE > 10 and LEVEL != 0: #*если не на уровнях -> завершаем игру
                 VICTORY = True
                 GAME_ZOMBIE = False 
-                SAVE["level"][f'{LEVEL}'] = True
+                DATA.SAVE["level"][f'{LEVEL}'] = True
                 LEVEL = False
-                save_game(SAVE)
+                DATA.save_game()
             if keys[pygame.K_F2]: #? если очень хочется, можно создать ещё зомби
-                zomb = Zombie_2()
+                zomb = Zombie_2(GRID, DATA, IMAGE)
                 all_sprites_zobies.add(zomb)
 
             
@@ -704,7 +698,8 @@ while running:
         surf_m.set_alpha(100)# прозрачность
 
         screen.blit(surf_m, (0, 0))
-        if level_open == True: surferlevel.render(screen, dt)
+        if level_open: surferlevel.render(screen, dt)
+        elif setting_open: surfersetting.render(screen, dt)
         else:
             for object in obj_btn_2:  object.process()  # рисуем кнопки
             if help_open == True: help()

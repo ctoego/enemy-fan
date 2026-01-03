@@ -1,9 +1,7 @@
 import pygame
 import os
-import tkinter as tk
-from tkinter import ttk  
+import json
 
-import json, os
 """файл для вынесения некоторых функций из основного кода"""
 
 
@@ -68,26 +66,5 @@ def grids_config(MAPS, GRID, mousex, mousey): # находим клетку на
         return False
     return mousex//GRID, mousey//GRID
 
-def resetting_progress():
-    '''Сброс прогресса'''
-    p = {   "level": {
-                "1": False,
-                "2": False,
-                "3": False,
-                "4": False
-                },
-            "score": 0
-        }
-    with open('savegame.json', 'w',encoding='utf-8') as f:
-        json.dump(p, f)
 
-def loading_game():
-    with open('savegame.json', 'r',encoding='utf-8') as f:
-        return json.load(f)
-
-def save_game(save):
-    '''Сохранение результатов игрока'''
-
-    with open('savegame.json', 'w',encoding='utf-8') as f:
-        json.dump(save, f, indent=4)
 
