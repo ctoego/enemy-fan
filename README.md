@@ -1,4 +1,4 @@
-Enemy fan
+#### Enemy fan
 
 
 
@@ -30,10 +30,14 @@ Q - выстрел
 |	|──set.py
 
 |	|──level.py
-|──setting.json
 
-|──savegame.json
-|──config.toml
+|──data/
+|	|──setting.json
+
+|	|──savegame.json
+|	|──config.toml
+
+|	|──data.py
 |──sprites/
 |    	|──arrow.py
 |    	|──bullet.py
