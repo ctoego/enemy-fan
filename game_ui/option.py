@@ -1,14 +1,14 @@
 import pygame
 import os
-import json
+
 
 """файл для вынесения некоторых функций из основного кода"""
 
 
 
 # загрузка изображений
-def img(IMAGE):
-    from main import WIDTH, HEIGHT, GRID
+def img(IMAGE, WIDTH, HEIGHT, GRID):
+
     # матрица
     ns_0 = pygame.image.load("./image/matrix/s_0.jpg").convert()
     ns_1 = pygame.image.load("./image/matrix/s_1.jpg").convert()

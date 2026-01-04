@@ -3,23 +3,19 @@ import random
 import ctypes # узнаём разрешение экрана
 import sys
 import os
-
-
 import numpy as np
 
 
 
-# мои коды
+# мой код
 
-from game_ui.menu import Button_1, Button_2 # мои кнопки прочее
-
-
+from game_ui.menu import Button_1, Button_2
 from game_ui.level import SurferLevel
 from game_ui.set import SurferSetting
-
-
 from game_ui.option import grids_config, img
-from sprites.arrow import Arrow# спрайты различных построек
+
+
+from sprites.arrow import Arrow
 from sprites.map import Map
 from sprites.window import Window
 from sprites.bullet import Bullet_1 # класс для выстрелов
@@ -120,7 +116,7 @@ IMAGE = {"numbers": {}, #словарь с изображениями
 
 
 
-IMAGE = img(IMAGE)
+IMAGE = img(IMAGE, WIDTH, HEIGHT, GRID)
 MAPS = {} # словарь со значением о всех клетках на карте
 OPT = 0  # переменная что хотим поставить
 
@@ -132,11 +128,6 @@ obj_btn_2 = []
 obj_btn_3 = []  #   выбор уровней
 
 fin = len(IMAGE["intro"])
-
-
-
-
-
 
 
 
@@ -242,7 +233,7 @@ class Spawn(pygame.sprite.Sprite): # спрайт спавна наших юни
 def cret_new_game():
 
     
-    global MAPS, VARIABLE,  all_sprites_map, WAWE, VOLUME_TURRENT, VOLUME_WINDOW, GAME_ZOMBIE, OPT, MAX_TURRENT, MAX_WINDOW, VICTORY
+    global MAPS, VARIABLE,  all_sprites_map, WAVE, VOLUME_TURRENT, VOLUME_WINDOW, GAME_ZOMBIE, OPT, MAX_TURRENT, MAX_WINDOW, VICTORY
 
 
 
@@ -257,7 +248,7 @@ def cret_new_game():
             }  
 
 
-    WAWE = 0 # номер волны
+    WAVE = 0 # номер волны
     GAME_ZOMBIE = True # начали ли мы игру
     OPT = 0
     MAPS = np.zeros((96, 50))   # двумерный массив numpy 
@@ -314,7 +305,7 @@ def help():
 
 
 # курсор
-arrow = Arrow()
+arrow = Arrow(mousex, mousey, GRID)
 all_sprites_arrow = pygame.sprite.Group();  all_sprites_arrow.add(arrow)
 
 
@@ -325,17 +316,17 @@ def open_game_menu_1():
     else: VARIABLE["menu_game_1"] = True
 
 
-button_1_game = Button_2(WIDTH//1.07, HEIGHT//1.13,  open_game_menu_1)
+button_1_game = Button_2(WIDTH//1.07, HEIGHT//1.13, WIDTH, HEIGHT,  open_game_menu_1)
 
 
-button_open_turrent_1 = Button_2(WIDTH//3.5, HEIGHT//1.07, None, "турели", True)
+button_open_turrent_1 = Button_2(WIDTH//3.5, HEIGHT//1.07, WIDTH, HEIGHT, None, "турели", True)
 
 
 
 all_sprites_decoration_btn = pygame.sprite.Group()
 
 
-button_open_window = Button_2(WIDTH//2.9, HEIGHT//1.07,  None, "битое стекло", True)
+button_open_window = Button_2(WIDTH//2.9, HEIGHT//1.07, WIDTH, HEIGHT, None, "битое стекло", True)
 
 
 
@@ -467,41 +458,42 @@ def clear_sprites_group(all_sprites_map, all_sprites_window, all_sprites_spawn, 
 
 class Create_zombie():
     @staticmethod
-    def new_wawe(all_sprites_zobies):
+    def new_WAVE(all_sprites_zobies):
         if LEVEL == 0:
-            if WAWE > 2:
+            if WAVE > 2:
                 
-                for i in range(random.randint(0, WAWE)):
+                for i in range(random.randint(0, WAVE)):
                     zomb = Zombie_3(GRID, DATA, IMAGE)
                     all_sprites_zobies.add(zomb)
-                for i in range(random.randint(0, WAWE)):
+                for i in range(random.randint(0, WAVE)):
                     zomb = Zombie_2(GRID, DATA, IMAGE)
                     all_sprites_zobies.add(zomb)
-            if WAWE > 5:
-                rn = random.randint(0, WAWE)
+            if WAVE > 5:
+                rn = random.randint(0, WAVE)
                 for i in range(rn):
                     zomb = Zombie_4(GRID, DATA, IMAGE)
                     all_sprites_zobies.add(zomb)
-            if WAWE > 0:
-                for i in range(random.randint(0, WAWE**2)):
+            if WAVE > 0:
+                for i in range(random.randint(0, WAVE**2)):
                     zomb = Zombie_2(GRID, DATA, IMAGE)
                     all_sprites_zobies.add(zomb)
             
         elif LEVEL == 1: 
             enemy = [Zombie_1, Zombie_2, Zombie_3]
-            for i in range(int(WAWE**1.5)):
+            for i in range(int(WAVE**1.5)):
                 zomb = random.choice(enemy)(GRID, DATA, IMAGE)
                 all_sprites_zobies.add(zomb)
         
         elif LEVEL == 2: 
-            for i in range(int(WAWE**1.5)):
+            for i in range(int(WAVE**1.5)):
                 zomb = random.choice([Zombie_1, Zombie_2])(GRID, DATA, IMAGE)
                 all_sprites_zobies.add(zomb)
-            for i in range(WAWE):
+            for i in range(WAVE):
                 zomb = random.choice([Zombie_3, Zombie_4])(GRID, DATA, IMAGE)
                 all_sprites_zobies.add(zomb)
 
         return all_sprites_zobies
+
 # TODO классы менюшек(выбора уровня, настроек)
 surferlevel = SurferLevel(GRID) 
 surfersetting = SurferSetting(GRID, DATA) 
@@ -621,14 +613,14 @@ while running:
 
             endless_mode_render(screen)
 
-            all_sprites_arrow.update(grids_config, OPT, screen, GRID, MAPS, VOLUME_WINDOW, VOLUME_TURRENT, WAWE, mousex, mousey)    #* что у нас на курсоре
+            all_sprites_arrow.update(grids_config, OPT, screen, GRID, MAPS, VOLUME_WINDOW, VOLUME_TURRENT, WAVE, mousex, mousey)    #* что у нас на курсоре
 
             
             if keys[pygame.K_ESCAPE]: lbl = 0; OPT = 0; OPTCURSOR = "" #заменяем переменную
 
             if str(all_sprites_zobies) == "<Group(0 sprites)>": 
-                all_sprites_zobies = Create_zombie.new_wawe(all_sprites_zobies)
-                WAWE += 1
+                all_sprites_zobies = Create_zombie.new_WAVE(all_sprites_zobies)
+                WAVE += 1
                 MAX_TURRENT +=1
                 MAX_WINDOW += 1
 
@@ -641,7 +633,7 @@ while running:
                         all_sprites_spawn, all_sprites_turent,
                         all_sprites_zobies,all_sprites_bullet)
             
-            elif WAWE > 10 and LEVEL != 0: #*если не на уровнях -> завершаем игру
+            elif WAVE > 10 and LEVEL != 0: #*если не на уровнях -> завершаем игру
                 VICTORY = True
                 GAME_ZOMBIE = False 
                 DATA.SAVE["level"][f'{LEVEL}'] = True
@@ -652,7 +644,7 @@ while running:
                 all_sprites_zobies.add(zomb)
 
             
-            screen.blit(f1.render(f'Волна: {WAWE}', True, (180, 0, 0)), (10, GRID*5))
+            screen.blit(f1.render(f'Волна: {WAVE}', True, (180, 0, 0)), (10, GRID*5))
 
             screen.blit(f1.render(f'Доступно битых окон: {MAX_WINDOW - VOLUME_WINDOW}', True, (180, 0, 0)), (10, GRID*7))
 
@@ -665,8 +657,8 @@ while running:
             VARIABLE["menu_game_1"] = True
         else:
             pygame.draw.rect(screen, (64, 128, 255), (0, 0, WIDTH, HEIGHT))
-            wawe_text = f1.render("Ты проиграл!", True, (180, 0, 0))
-            screen.blit(wawe_text, (WIDTH//2, HEIGHT//2))
+            WAVE_text = f1.render("Ты проиграл!", True, (180, 0, 0))
+            screen.blit(WAVE_text, (WIDTH//2, HEIGHT//2))
             VARIABLE["menu_game_1"] = True
 
 
@@ -701,7 +693,7 @@ while running:
         if level_open: surferlevel.render(screen, dt)
         elif setting_open: surfersetting.render(screen, dt)
         else:
-            for object in obj_btn_2:  object.process()  # рисуем кнопки
+            for object in obj_btn_2:  object.process(screen)  # рисуем кнопки
             if help_open == True: help()
 
 
@@ -712,7 +704,7 @@ while running:
     if keys[pygame.K_F7]: FPS = 200
     if keys[pygame.K_F8]: FPS = 60
     if keys[pygame.K_F6]: print(all_sprites_zobies)
-    if keys[pygame.K_F1]: WAWE = 10
+    if keys[pygame.K_F1]: WAVE = 10
     pygame.display.flip()   # обновляем все поверхности
 
 

@@ -66,9 +66,9 @@ class Button_1(): #клас кнопка
 
 
 class Button_2(pygame.sprite.Sprite):
-    def __init__(self, x, y,  command, label_text = "", label = False):
+    def __init__(self, x, y, WIDTH, HEIGHT, command, label_text = "", label = False):
         pygame.sprite.Sprite.__init__(self)
-        from main import WIDTH, HEIGHT
+        
         self.image = pygame.Surface((WIDTH//38.4, HEIGHT//21.6))
         self.image.fill((109, 107, 83)) 
         self.rect = self.image.get_rect()
@@ -83,8 +83,8 @@ class Button_2(pygame.sprite.Sprite):
         self.label_text = label_text    # текст пометки при наведении курсора
         font = pygame.font.SysFont('Arial', WIDTH//96) #шрифт
         self.label_text = font.render(label_text, True, (20, 20, 20))
-    def update(self): 
-        from main import screen
+    def update(self, screen): 
+        
         mousepos = pygame.mouse.get_pos()
         if self.rect.collidepoint(mousepos):# соприкосновение
             if self.label == True: # если пометка есть

@@ -20,33 +20,27 @@ Q - выстрел
 
 
 #### расположение файлов
-
-.
+```
+.\
 |──main.py
-
 |──game\_ui/
-|	|──menu.py
-|	|──option.py
-|	|──set.py
-
-|	|──level.py
-
-|──data/
+|   |──menu.py
+|   |──option.py
+|   |──set.py   
+|   |──level.py 
+|──data/ 
 |	|──setting.json
-
 |	|──savegame.json
 |	|──config.toml
-
 |	|──data.py
-|──sprites/
-|    	|──arrow.py
-|    	|──bullet.py
-|    	|──map.py
-|   	|──window.py
-|    	|──zombie.py
-
+|──sprites/ 
+|   |──arrow.py 
+|   |──bullet.py
+|   |──map.py
+|   |──window.py
+|   |──zombie.py
 |──image/ # изображения
-
+```
 
 
 

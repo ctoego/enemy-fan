@@ -11,8 +11,8 @@ WHITE = (255, 255, 255)
 
 
 class Arrow(pygame.sprite.Sprite): #когда игрок берёт стену, предмет или т.п. около курсора получается 
-    def __init__(self,  color = (51, 51, 51)):  # number номер клетки на котором он стоит
-        from main import mousex, mousey, GRID
+    def __init__(self, mousex, mousey, GRID, color = (51, 51, 51)):  # number номер клетки на котором он стоит
+
         pygame.sprite.Sprite.__init__(self)
         self.size_image = GRID
         self.image = pygame.Surface((self.size_image, self.size_image))
@@ -28,11 +28,11 @@ class Arrow(pygame.sprite.Sprite): #когда игрок берёт стену,
 
 
 
-    def update(self, grids_config, OPT, screen, GRID, MAPS, VOLUME_WINDOW, VOLUME_TURRENT,WAWE, mousex, mousey): 
+    def update(self, grids_config, OPT, screen, GRID, MAPS, VOLUME_WINDOW, VOLUME_TURRENT,WAVE, mousex, mousey): 
 
         if OPT == 1: 
 
-            if VOLUME_TURRENT < 25 + WAWE:
+            if VOLUME_TURRENT < 25 + WAVE:
                 number = grids_config(MAPS, GRID, mousex, mousey)
                 if number:
                     
@@ -49,7 +49,7 @@ class Arrow(pygame.sprite.Sprite): #когда игрок берёт стену,
 
         elif OPT == 2:
             
-            if VOLUME_WINDOW < 25 + WAWE:
+            if VOLUME_WINDOW < 25 + WAVE:
                 
                 number = grids_config(MAPS, GRID, mousex, mousey)
                 
