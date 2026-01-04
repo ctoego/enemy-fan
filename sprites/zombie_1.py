@@ -10,7 +10,7 @@ class BaseZombie(pygame.sprite.Sprite):
         from main import WIDTH, Zom_x, Zom_y, HEIGHT
         
         # Оптимизация: используем словарь анимаций
-        self.animations = animations  # {'right': [frame1, frame2...], 'left': [...]}
+        self.animations = animations  
         self.current_anim = 'right'  # Начальная анимация
         self.anim_index = 0
         self.anim_timer = 0
@@ -184,122 +184,122 @@ class BaseZombie(pygame.sprite.Sprite):
 class Zombie_1(BaseZombie):
     """Быстрый, но слабый зомби"""
     
-    def __init__(self):
-        from main import WIDTH, DATA, IMAGE
+    def __init__(self, GRID, DATA, IMAGE):
+
         super().__init__(
 
             animations = IMAGE['zombie']['1'],
 
             size = 25,
             color = (20, 140, 99),
-            speed = DATA['Zombie_1']['speed'],
-            health = DATA['Zombie_1']['health']
+            speed = DATA.CONFIG['Zombie_1']['speed'],
+            health = DATA.CONFIG['Zombie_1']['health']
         )
         
 
-        self.window_damage = DATA['Zombie_1']['window_damage']
-        self.bullet_damage = DATA['Zombie_1']['bullet_damage']
+        self.window_damage = DATA.CONFIG['Zombie_1']['window_damage']
+        self.bullet_damage = DATA.CONFIG['Zombie_1']['bullet_damage']
 
 
 class Zombie_2(BaseZombie):
     """Средний зомби"""
     
-    def __init__(self):
-        from main import GRID, DATA, IMAGE
+    def __init__(self, GRID, DATA, IMAGE):
+        
         super().__init__(
             size=GRID,
             animations = IMAGE['zombie']['2'],
             color = (50, 145, 113),
-            speed = DATA['Zombie_2']['speed'],
-            health = DATA['Zombie_2']['health']
+            speed = DATA.CONFIG['Zombie_2']['speed'],
+            health = DATA.CONFIG['Zombie_2']['health']
         )
-        self.window_damage = DATA['Zombie_2']['window_damage']
-        self.bullet_damage = DATA['Zombie_2']['bullet_damage']
+        self.window_damage = DATA.CONFIG['Zombie_2']['window_damage']
+        self.bullet_damage = DATA.CONFIG['Zombie_2']['bullet_damage']
 
 
 class Zombie_3(BaseZombie):
     """Тяжелый зомби"""
     
-    def __init__(self):
-        from main import GRID, DATA
+    def __init__(self, GRID, DATA, IMAGE):
+
         super().__init__(
             size=GRID,
             color=(50, 145, 99),
-            speed = DATA['Zombie_3']['speed'],
-            health = DATA['Zombie_3']['health']
+            speed = DATA.CONFIG['Zombie_3']['speed'],
+            health = DATA.CONFIG['Zombie_3']['health']
         )
-        self.window_damage = DATA['Zombie_3']['window_damage']
-        self.bullet_damage = DATA['Zombie_3']['bullet_damage']
+        self.window_damage = DATA.CONFIG['Zombie_3']['window_damage']
+        self.bullet_damage = DATA.CONFIG['Zombie_3']['bullet_damage']
 
 
 class Zombie_4(BaseZombie):
     """Босс-зомби"""
     
-    def __init__(self):
-        from main import GRID, DATA
+    def __init__(self, GRID, DATA, IMAGE):
+
         super().__init__(
             size=GRID,
             color=(50, 145, 99),
-            speed = DATA['Zombie_4']['speed'],
-            health = DATA['Zombie_4']['health']
+            speed = DATA.CONFIG['Zombie_4']['speed'],
+            health = DATA.CONFIG['Zombie_4']['health']
         )
-        self.window_damage = DATA['Zombie_4']['window_damage']
-        self.bullet_damage = DATA['Zombie_4']['bullet_damage']
+        self.window_damage = DATA.CONFIG['Zombie_4']['window_damage']
+        self.bullet_damage = DATA.CONFIG['Zombie_4']['bullet_damage']
 
 class Zombie_5(BaseZombie):
     """Босс-зомби"""
     
-    def __init__(self):
-        from main import GRID, DATA
+    def __init__(self, GRID, DATA, IMAGE):
+
         super().__init__(
             size=GRID,
             color=(50, 145, 99),
-            speed = DATA['Zombie_5']['speed'],
-            health = DATA['Zombie_5']['health']
+            speed = DATA.CONFIG['Zombie_5']['speed'],
+            health = DATA.CONFIG['Zombie_5']['health']
         )
-        self.window_damage = DATA['Zombie_5']['window_damage']
-        self.bullet_damage = DATA['Zombie_5']['bullet_damage']
+        self.window_damage = DATA.CONFIG['Zombie_5']['window_damage']
+        self.bullet_damage = DATA.CONFIG['Zombie_5']['bullet_damage']
 
 class Zombie_6(BaseZombie):
     """Босс-зомби"""
     
-    def __init__(self):
-        from main import GRID, DATA
+    def __init__(self, GRID, DATA, IMAGE):
+
         super().__init__(
             size=GRID,
             color=(50, 145, 99),
-            speed = DATA['Zombie_6']['speed'],
-            health = DATA['Zombie_6']['health']
+            speed = DATA.CONFIG['Zombie_6']['speed'],
+            health = DATA.CONFIG['Zombie_6']['health']
         )
-        self.window_damage = DATA['Zombie_6']['window_damage']
-        self.bullet_damage = DATA['Zombie_6']['bullet_damage']
+        self.window_damage = DATA.CONFIG['Zombie_6']['window_damage']
+        self.bullet_damage = DATA.CONFIG['Zombie_6']['bullet_damage']
 
 
 class Zombie_7(BaseZombie):
     """Босс-зомби"""
     
-    def __init__(self):
-        from main import GRID, DATA
+    def __init__(self, GRID, DATA, IMAGE):
+
         super().__init__(
             size=GRID,
             color=(50, 145, 99),
-            speed = DATA['Zombie_7']['speed'],
-            health = DATA['Zombie_7']['health']
+            speed = DATA.CONFIG['Zombie_7']['speed'],
+            health = DATA.CONFIG['Zombie_7']['health']
         )
-        self.window_damage = DATA['Zombie_7']['window_damage']
-        self.bullet_damage = DATA['Zombie_7']['bullet_damage']
+        self.window_damage = DATA.CONFIG['Zombie_7']['window_damage']
+        self.bullet_damage = DATA.CONFIG['Zombie_7']['bullet_damage']
 
 
 class Zombie_8(BaseZombie):
     """Босс-зомби"""
     
-    def __init__(self):
-        from main import GRID, DATA
+    def __init__(self, GRID, DATA, IMAGE):
+
         super().__init__(
             size=GRID,
             color=(50, 145, 99),
-            speed = DATA['Zombie_8']['speed'],
-            health = DATA['Zombie_8']['health']
+            speed = DATA.CONFIG['Zombie_8']['speed'],
+            health = DATA.CONFIG['Zombie_8']['health']
         )
-        self.window_damage = DATA['Zombie_8']['window_damage']
-        self.bullet_damage = DATA['Zombie_8']['bullet_damage']
+        self.window_damage = DATA.CONFIG['Zombie_8']['window_damage']
+        self.bullet_damage = DATA.CONFIG['Zombie_8']['bullet_damage']
