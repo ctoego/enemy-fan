@@ -1,7 +1,6 @@
 import pygame
 import random
 import ctypes # узнаём разрешение экрана
-import json
 import sys
 import os
 
@@ -68,18 +67,19 @@ elif CONFIG["resolution"] == "1920x1080":
 else:   #* в любом случае выбираем это, так же это вызовет искажённый файл настроек
     WIDTH = 1632
     HEIGHT = 918
-    
+
 
 FPS = DATA.SETTING['FPS_max']
 GRID = WIDTH//96
 
 GAME_HEIGHT = HEIGHT - GRID * 4
 # Задаем цвета
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
+
+WHITE = DATA.COLOR['WHITE']
+BLACK = DATA.COLOR['BLACK']
+RED = DATA.COLOR['RED']
+GREEN = DATA.COLOR['GREEN']
+BLUE = DATA.COLOR['BLUE']
 
 
 pygame.font.init()

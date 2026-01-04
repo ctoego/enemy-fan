@@ -2,13 +2,13 @@ import json, toml, sys
 
 class Data:
     def __init__(self):
+        
         self.SETTING = self.loading_setting()
         self.SAVE = self.loading_game()
         self.CONFIG = self.loading_config()
+        self.COLOR = self.CONFIG['Color']
 
-
-
-
+    
     def loading_config(self):
         try:
             with open('./data/config.toml', 'r') as f:  
