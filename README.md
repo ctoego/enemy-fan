@@ -23,7 +23,7 @@ Q - выстрел
 ```
 .\
 |──main.py
-|──game\_ui/
+|──game_ui/
 |   |──menu.py
 |   |──option.py
 |   |──set.py   
