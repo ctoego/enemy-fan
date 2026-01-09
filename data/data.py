@@ -32,7 +32,7 @@ class Data:
         
     def save_setting(self):
         try:
-            with open('./data/satting.json', 'w',encoding='utf-8') as f:
+            with open('./data/setting.json', 'w',encoding='utf-8') as f:
                 json.dump(self.SETTING, f, indent=4)
         except:
             print(f"data.py class Data: Error open or write setting.json at saving the setting. No stop program.")
