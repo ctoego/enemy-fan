@@ -65,7 +65,7 @@ else:   #* в любом случае выбираем это, так же эт�
     HEIGHT = 918
 
 
-FPS = DATA.SETTING['FPS_max']
+FPS = int(DATA.SETTING['FPS_max'])
 GRID = WIDTH//96
 
 GAME_HEIGHT = HEIGHT - GRID * 4

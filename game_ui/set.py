@@ -77,7 +77,7 @@ class SurferSetting():
             text='Разрешение',
             manager = self.ui_manager,
         )
-
+        print( DATA.SETTING['resolution'])
         self.selection_resolution = pygame_gui.elements.UIDropDownMenu(
             relative_rect=pygame.Rect(self.ui_offset_x + GRID * 12, self.ui_offset_y + GRID * 18, GRID*10, GRID*3),
             options_list=["1920x1080", "1632x918", "auto"],
