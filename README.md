@@ -4,7 +4,13 @@
 
 Игра в которой вам нечего делать. Есть только вы и враги. Будьте бдительны и помните о своей цели.
 
+#### Ссылки
 
+[Репозиторий github.com  (pygame)](https://github.com/ctoego/enemy-fan)
+
+[Репозиторий gitverse.ru (pygame)](https://gitverse.ru/cto_ego/EnemyFan)
+
+[Версия на Godot](https://github.com/Castor2234/enemy-td-godot)
 
 #### Горячие клавиши
 
@@ -21,11 +27,13 @@ Q - выстрел
 2 - Выбор шипов
 
 
+
 #### расположение файлов
+
 ```
-.\
+.\\
 |──main.py
-|──game_ui/
+|──game\_ui/
 |   |──menu.py
 |   |──option.py
 |   |──set.py   
@@ -43,6 +51,7 @@ Q - выстрел
 |   |──zombie.py
 |──image/ # изображения
 ```
+
 
 
 
