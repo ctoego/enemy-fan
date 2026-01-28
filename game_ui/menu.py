@@ -34,8 +34,8 @@ class Button_1(): #клас кнопка
         self.listing.append(self)
     def loading_lis(self):  return self.listing
     
-    def process(self): 
-        from main import screen
+    def process(self, screen): 
+
         mousePos = pygame.mouse.get_pos()
         
         self.buttonSurface.fill(self.fillColors['normal'])

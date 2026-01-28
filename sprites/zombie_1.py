@@ -5,9 +5,9 @@ import math
 class BaseZombie(pygame.sprite.Sprite):
     """Оптимизированный базовый класс для зомби с анимацией"""
     
-    def __init__(self, size, color, speed, health, animations = None):
+    def __init__(self, size, color, speed, health, WIDTH, Zom_x, Zom_y, GAME_HEIGHT, animations = None):
         super().__init__()
-        from main import WIDTH, Zom_x, Zom_y, HEIGHT
+        
         
         # Оптимизация: используем словарь анимаций
         self.animations = animations  
@@ -38,11 +38,11 @@ class BaseZombie(pygame.sprite.Sprite):
             self.rect.y = random.randint(-200, -50)
         elif side == 1:  # Право
             self.rect.x = random.randint(WIDTH + 10, WIDTH + 100)
-            self.rect.y = random.randint(-50, int(HEIGHT//1.5))
+            self.rect.y = random.randint(-50, int(GAME_HEIGHT//1.5))
 
         else:  # Лево
             self.rect.x = random.randint(-100, -10)
-            self.rect.y = random.randint(-50, int(HEIGHT//1.5))
+            self.rect.y = random.randint(-50, int(GAME_HEIGHT//1.5))
         self.x = self.rect.x
         self.y = self.rect.y
 
@@ -184,7 +184,7 @@ class BaseZombie(pygame.sprite.Sprite):
 class Zombie_1(BaseZombie):
     """Быстрый, но слабый зомби"""
     
-    def __init__(self, GRID, DATA, IMAGE):
+    def __init__(self, GRID, DATA, IMAGE, WIDTH, Zom_x, Zom_y, GAME_HEIGHT):
 
         super().__init__(
 
@@ -193,7 +193,11 @@ class Zombie_1(BaseZombie):
             size = 25,
             color = (20, 140, 99),
             speed = DATA.CONFIG['Zombie_1']['speed'],
-            health = DATA.CONFIG['Zombie_1']['health']
+            health = DATA.CONFIG['Zombie_1']['health'],
+            WIDTH = WIDTH,
+            Zom_x = Zom_x,
+            Zom_y = Zom_y,
+            GAME_HEIGHT = GAME_HEIGHT
         )
         
 
@@ -204,14 +208,18 @@ class Zombie_1(BaseZombie):
 class Zombie_2(BaseZombie):
     """Средний зомби"""
     
-    def __init__(self, GRID, DATA, IMAGE):
+    def __init__(self, GRID, DATA, IMAGE, WIDTH, Zom_x, Zom_y, GAME_HEIGHT):
         
         super().__init__(
             size=GRID,
             animations = IMAGE['zombie']['2'],
             color = (50, 145, 113),
             speed = DATA.CONFIG['Zombie_2']['speed'],
-            health = DATA.CONFIG['Zombie_2']['health']
+            health = DATA.CONFIG['Zombie_2']['health'],
+            WIDTH = WIDTH,
+            Zom_x = Zom_x,
+            Zom_y = Zom_y,
+            GAME_HEIGHT = GAME_HEIGHT
         )
         self.window_damage = DATA.CONFIG['Zombie_2']['window_damage']
         self.bullet_damage = DATA.CONFIG['Zombie_2']['bullet_damage']
@@ -220,7 +228,7 @@ class Zombie_2(BaseZombie):
 class Zombie_3(BaseZombie):
     """Тяжелый зомби"""
     
-    def __init__(self, GRID, DATA, IMAGE):
+    def __init__(self, GRID, DATA, IMAGE, WIDTH, Zom_x, Zom_y, GAME_HEIGHT):
 
         super().__init__(
             size=GRID,
@@ -235,7 +243,7 @@ class Zombie_3(BaseZombie):
 class Zombie_4(BaseZombie):
     """Босс-зомби"""
     
-    def __init__(self, GRID, DATA, IMAGE):
+    def __init__(self, GRID, DATA, IMAGE, WIDTH, Zom_x, Zom_y, GAME_HEIGHT):
 
         super().__init__(
             size=GRID,
@@ -246,60 +254,3 @@ class Zombie_4(BaseZombie):
         self.window_damage = DATA.CONFIG['Zombie_4']['window_damage']
         self.bullet_damage = DATA.CONFIG['Zombie_4']['bullet_damage']
 
-class Zombie_5(BaseZombie):
-    """Босс-зомби"""
-    
-    def __init__(self, GRID, DATA, IMAGE):
-
-        super().__init__(
-            size=GRID,
-            color=(50, 145, 99),
-            speed = DATA.CONFIG['Zombie_5']['speed'],
-            health = DATA.CONFIG['Zombie_5']['health']
-        )
-        self.window_damage = DATA.CONFIG['Zombie_5']['window_damage']
-        self.bullet_damage = DATA.CONFIG['Zombie_5']['bullet_damage']
-
-class Zombie_6(BaseZombie):
-    """Босс-зомби"""
-    
-    def __init__(self, GRID, DATA, IMAGE):
-
-        super().__init__(
-            size=GRID,
-            color=(50, 145, 99),
-            speed = DATA.CONFIG['Zombie_6']['speed'],
-            health = DATA.CONFIG['Zombie_6']['health']
-        )
-        self.window_damage = DATA.CONFIG['Zombie_6']['window_damage']
-        self.bullet_damage = DATA.CONFIG['Zombie_6']['bullet_damage']
-
-
-class Zombie_7(BaseZombie):
-    """Босс-зомби"""
-    
-    def __init__(self, GRID, DATA, IMAGE):
-
-        super().__init__(
-            size=GRID,
-            color=(50, 145, 99),
-            speed = DATA.CONFIG['Zombie_7']['speed'],
-            health = DATA.CONFIG['Zombie_7']['health']
-        )
-        self.window_damage = DATA.CONFIG['Zombie_7']['window_damage']
-        self.bullet_damage = DATA.CONFIG['Zombie_7']['bullet_damage']
-
-
-class Zombie_8(BaseZombie):
-    """Босс-зомби"""
-    
-    def __init__(self, GRID, DATA, IMAGE):
-
-        super().__init__(
-            size=GRID,
-            color=(50, 145, 99),
-            speed = DATA.CONFIG['Zombie_8']['speed'],
-            health = DATA.CONFIG['Zombie_8']['health']
-        )
-        self.window_damage = DATA.CONFIG['Zombie_8']['window_damage']
-        self.bullet_damage = DATA.CONFIG['Zombie_8']['bullet_damage']

@@ -1,4 +1,4 @@
-import json, toml, sys
+import json, toml, sys, time
 
 class Data:
     def __init__(self):
@@ -11,10 +11,11 @@ class Data:
     
     def loading_config(self):
         try:
-            with open('./data/config.toml', 'r') as f:  
+            with open('./data/config.toml', 'r', encoding='utf-8') as f:  
                 return toml.load(f)  
         except:
             print('data.py class Data: Error open or read config.toml. Stopping the program.')
+            time.sleep(5)
             sys.exit()
 
     def loading_setting(self):
@@ -26,13 +27,13 @@ class Data:
             return {
                     "FPS_see": True,
                     "intro": True,
-                    "resolution": "1632x932",
+                    "resolution": "1632x918",
                     "FPS_max": 120
                     }
         
     def save_setting(self):
         try:
-            with open('./data/satting.json', 'w',encoding='utf-8') as f:
+            with open('./data/setting.json', 'w',encoding='utf-8') as f:
                 json.dump(self.SETTING, f, indent=4)
         except:
             print(f"data.py class Data: Error open or write setting.json at saving the setting. No stop program.")

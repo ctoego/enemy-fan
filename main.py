@@ -4,7 +4,7 @@ import ctypes # узнаём разрешение экрана
 import sys
 import os
 import numpy as np
-
+import pygame_gui, toml
 
 
 # мой код
@@ -65,7 +65,7 @@ else:   #* в любом случае выбираем это, так же эт�
     HEIGHT = 918
 
 
-FPS = DATA.SETTING['FPS_max']
+FPS = int(DATA.SETTING['FPS_max'])
 GRID = WIDTH//96
 
 GAME_HEIGHT = HEIGHT - GRID * 4
@@ -231,11 +231,7 @@ class Spawn(pygame.sprite.Sprite): # спрайт спавна наших юни
 
 
 def cret_new_game():
-
-    
     global MAPS, VARIABLE,  all_sprites_map, WAVE, VOLUME_TURRENT, VOLUME_WINDOW, GAME_ZOMBIE, OPT, MAX_TURRENT, MAX_WINDOW, VICTORY
-
-
 
     VARIABLE = { # словарь с игровыми переменными 
             # что мы будем ставить
@@ -260,7 +256,7 @@ def cret_new_game():
             all_sprites_map.add(map)
 
 
-
+    
 
     VOLUME_TURRENT = 0 # кол-во турелей
     VOLUME_WINDOW = 0 # кол-во окон
@@ -272,7 +268,7 @@ def cret_new_game():
     # создаём новые группы спрайтов
     global  all_sprites_bullet
     global  all_sprites_spawn, all_sprites_window, all_sprites_zobies, all_sprites_turent
-
+    
 
     all_sprites_window = pygame.sprite.Group()
 
@@ -281,12 +277,17 @@ def cret_new_game():
     all_sprites_zobies = pygame.sprite.Group() # зомби
     all_sprites_bullet = pygame.sprite.Group() # снаряды
     all_sprites_turent = pygame.sprite.Group() # турели 
+    
     global spawn
+    
     spawn = Spawn(5000)
     all_sprites_spawn.add(spawn)
-    z = Zombie_1(GRID, DATA, IMAGE)
-    all_sprites_zobies.add(z)
+    
+    z = Zombie_1(GRID, DATA, IMAGE, WIDTH, Zom_x, Zom_y, GAME_HEIGHT)
 
+    all_sprites_zobies.add(z)
+    
+cret_new_game()     #? вызываем, чтобы потом с первого раза начиналась игра
 
 def help(): 
 
@@ -355,11 +356,12 @@ surf_m = pygame.Surface((WIDTH, HEIGHT))
 
 # кнопки в главном меню с текстом
 def run_game(level): 
-    
-    cret_new_game() # создаём поле
     global game, LEVEL
-    game = True
     LEVEL = level
+    cret_new_game() # создаём поле
+    
+    game = True
+    
 
 btn_1_menu = Button_1(WIDTH//2, HEIGHT//2 ,WIDTH//9 , HEIGHT//13 ,obj_btn_2,"бесконечность", lambda: (run_game(0)), 27);   obj_btn_2 = btn_1_menu.loading_lis()    # ЗАБИРАЕМ СПИСОК
 # кнопки в главном меню с текстом
@@ -463,33 +465,33 @@ class Create_zombie():
             if WAVE > 2:
                 
                 for i in range(random.randint(0, WAVE)):
-                    zomb = Zombie_3(GRID, DATA, IMAGE)
+                    zomb = Zombie_3(GRID, DATA, IMAGE, WIDTH, Zom_x, Zom_y, GAME_HEIGHT)
                     all_sprites_zobies.add(zomb)
                 for i in range(random.randint(0, WAVE)):
-                    zomb = Zombie_2(GRID, DATA, IMAGE)
+                    zomb = Zombie_2(GRID, DATA, IMAGE, WIDTH, Zom_x, Zom_y, GAME_HEIGHT)
                     all_sprites_zobies.add(zomb)
             if WAVE > 5:
                 rn = random.randint(0, WAVE)
                 for i in range(rn):
-                    zomb = Zombie_4(GRID, DATA, IMAGE)
+                    zomb = Zombie_4(GRID, DATA, IMAGE, WIDTH, Zom_x, Zom_y, GAME_HEIGHT)
                     all_sprites_zobies.add(zomb)
             if WAVE > 0:
                 for i in range(random.randint(0, WAVE**2)):
-                    zomb = Zombie_2(GRID, DATA, IMAGE)
+                    zomb = Zombie_2(GRID, DATA, IMAGE, WIDTH, Zom_x, Zom_y, GAME_HEIGHT)
                     all_sprites_zobies.add(zomb)
             
         elif LEVEL == 1: 
             enemy = [Zombie_1, Zombie_2, Zombie_3]
             for i in range(int(WAVE**1.5)):
-                zomb = random.choice(enemy)(GRID, DATA, IMAGE)
+                zomb = random.choice(enemy)(GRID, DATA, IMAGE, WIDTH, Zom_x, Zom_y, GAME_HEIGHT)
                 all_sprites_zobies.add(zomb)
         
         elif LEVEL == 2: 
             for i in range(int(WAVE**1.5)):
-                zomb = random.choice([Zombie_1, Zombie_2])(GRID, DATA, IMAGE)
+                zomb = random.choice([Zombie_1, Zombie_2])(GRID, DATA, IMAGE, WIDTH, Zom_x, Zom_y, GAME_HEIGHT)
                 all_sprites_zobies.add(zomb)
             for i in range(WAVE):
-                zomb = random.choice([Zombie_3, Zombie_4])(GRID, DATA, IMAGE)
+                zomb = random.choice([Zombie_3, Zombie_4])(GRID, DATA, IMAGE, WIDTH, Zom_x, Zom_y, GAME_HEIGHT)
                 all_sprites_zobies.add(zomb)
 
         return all_sprites_zobies
@@ -557,7 +559,10 @@ while running:
         if setting_open == True:
             surfersetting.process(event)
             setting_open = surfersetting.is_exit_pressed()
-
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                level_open = False
+                setting_open = False
 
         if pygame.mouse.get_pressed()[0] and game == True:
             if (VOLUME_TURRENT < MAX_TURRENT or VOLUME_WINDOW < MAX_WINDOW):#TODO c каждой волной повышаем допустимое значение
@@ -618,6 +623,9 @@ while running:
             
             if keys[pygame.K_ESCAPE]: lbl = 0; OPT = 0; OPTCURSOR = "" #заменяем переменную
 
+            if keys[pygame.K_1]: OPT = 1    #hotkeys for control 
+            if keys[pygame.K_2]: OPT = 2
+
             if str(all_sprites_zobies) == "<Group(0 sprites)>": 
                 all_sprites_zobies = Create_zombie.new_WAVE(all_sprites_zobies)
                 WAVE += 1
@@ -640,7 +648,7 @@ while running:
                 LEVEL = False
                 DATA.save_game()
             if keys[pygame.K_F2]: #? если очень хочется, можно создать ещё зомби
-                zomb = Zombie_2(GRID, DATA, IMAGE)
+                zomb = Zombie_2(GRID, DATA, IMAGE, WIDTH, Zom_x, Zom_y, GAME_HEIGHT)
                 all_sprites_zobies.add(zomb)
 
             
@@ -668,11 +676,11 @@ while running:
 
         screen.blit(surf, (0, HEIGHT- 90))
         if VARIABLE["menu_game_1"]:
-            for object in obj_btn_1:  object.process()
+            for object in obj_btn_1:  object.process(screen)
 
         # обнолвляем и выводим кнопки в одном месте
         all_sprites_menu_game.draw(screen)
-        all_sprites_menu_game.update()
+        all_sprites_menu_game.update(screen)
         if VARIABLE["menu_game_2"]:
             all_sprites_decoration_btn.draw(screen)
             all_sprites_decoration_btn.update()
