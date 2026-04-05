@@ -18,5 +18,5 @@ class Window(pygame.sprite.Sprite): # окна
 
     def update(self, MAPS):
 
-        if MAPS[self.number[0], self.number[1]] == False or self.health <= 0:self.kill()    #если нет в списке -> удаляем
+        if MAPS[self.number[0]][self.number[1]] == False or self.health <= 0:self.kill()    #если нет в списке -> удаляем
 

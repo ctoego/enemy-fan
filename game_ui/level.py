@@ -55,7 +55,7 @@ class SurferLevel():
         self.button_action[self.button_exit] = self.exit
         # Для отслеживания состояния
         self.exit_pressed = False
-        self.level_pressed = False
+        self.level_pressed: int = -1        # -1 нихера не выбрали
 
     
     def render(self, screen, dt):
@@ -67,6 +67,7 @@ class SurferLevel():
         
     
     def process(self, event, LEVEL):
+        
         self.level_pressed = LEVEL
         self.ui_manager.process_events(event)
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -81,8 +82,12 @@ class SurferLevel():
     def exit(self):
         self.exit_pressed = True
 
+
+
     def is_level_pressed(self):
-        return  self.level_pressed
+        s = self.level_pressed
+        self.level_pressed = -1
+        return  s
     def level(self, level):
         self.level_pressed = level
         # Здесь можно добавить логику перехода на уровень

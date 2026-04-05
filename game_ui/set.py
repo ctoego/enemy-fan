@@ -1,7 +1,7 @@
 import pygame_gui
 import pygame
 
-import pygame.font
+import pygame
 
 
 class SurferSetting():
@@ -77,7 +77,7 @@ class SurferSetting():
             text='Разрешение',
             manager = self.ui_manager,
         )
-        print( DATA.SETTING['resolution'])
+
         self.selection_resolution = pygame_gui.elements.UIDropDownMenu(
             relative_rect=pygame.Rect(self.ui_offset_x + GRID * 12, self.ui_offset_y + GRID * 18, GRID*10, GRID*3),
             options_list=["1920x1080", "1632x918", "auto"],
@@ -87,6 +87,12 @@ class SurferSetting():
         )
         self.button_action[self.selection_resolution] = lambda: self.edit_setting()
         
+        label_version = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect((self.ui_offset_x + GRID , self.ui_offset_y + GRID * 24), (GRID*8, GRID*3)),
+            text='N-я версия',
+            manager = self.ui_manager,
+        )
+
         # Кнопка возврата
         self.button_exit = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((self.ui_offset_x + GRID*70, self.ui_offset_y + GRID * 32), (GRID*8, GRID*4)),

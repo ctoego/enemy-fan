@@ -17,6 +17,22 @@ class Data:
             print('data.py class Data: Error open or read config.toml. Stopping the program.')
             time.sleep(5)
             sys.exit()
+    
+    def loading_level(self, number: int):
+        try:
+            with open(f'./data/levels/level_{number}.toml', 'r', encoding='utf-8') as f:  
+                return toml.load(f)  
+        except:
+            print(f'data.py class Data: Error open or read ./data/level/level_{number}.toml')
+
+    def loading_enemy(self):
+        try:
+            with open(f'./data/enemy.toml', 'r', encoding='utf-8') as f:  
+                return toml.load(f)  
+        except:
+            print(f'data.py class Data: Error open or read enemy.toml')
+            return {}
+
 
     def loading_setting(self):
         try:

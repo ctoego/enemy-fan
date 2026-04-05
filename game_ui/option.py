@@ -59,7 +59,7 @@ def img(IMAGE, WIDTH, HEIGHT, GRID):
 
 def grids_config(MAPS, GRID, mousex, mousey): # находим клетку на которой находится курсор
 
-    rows, cols = MAPS.shape
+    rows, cols = len(MAPS), len(MAPS[0])
     if mousex//GRID < 0 or mousex//GRID >= rows:
         return False
     if mousey//GRID < 0 or mousey//GRID >= cols:
