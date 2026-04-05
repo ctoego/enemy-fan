@@ -1,0 +1,72 @@
+[Color]
+    # read and conversion the a type tuple 
+    # toml does not support the type tuple
+WHITE = [255, 255, 255]
+BLACK = [0, 0, 0]
+RED = [255, 0, 0]
+GREEN = [0, 255, 0]
+BLUE = [0, 0, 255]
+
+
+
+# характеристика врагов
+[Zombie_1]
+
+speed = 1
+health = 100
+window_damage = 1
+bullet_damage = 50
+score = 1
+
+
+[Zombie_2]
+
+speed = 1
+health = 140
+window_damage = 2
+bullet_damage = 50
+score = 1
+
+[Zombie_3]
+
+speed = 1
+health = 260
+window_damage = 2
+bullet_damage = 50
+score = 2
+
+[Zombie_4]
+
+speed = 1
+health = 520
+window_damage = 1
+bullet_damage = 50
+score = 2
+
+[Zombie_5]
+
+speed = 2
+health = 260
+window_damage = 1
+bullet_damage = 50
+
+[Zombie_6]
+
+speed = 1
+health = 520
+window_damage = 1
+bullet_damage = 50
+
+[Zombie_7]
+
+speed = 1
+health = 520
+window_damage = 1
+bullet_damage = 50
+
+[Zombie_8]
+
+speed = 1
+health = 520
+window_damage = 1
+bullet_damage = 50
