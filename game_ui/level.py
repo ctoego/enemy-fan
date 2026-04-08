@@ -53,6 +53,19 @@ class SurferLevel():
             manager=self.ui_manager
         )
         self.button_action[self.button_exit] = self.exit
+
+        scrolling_container = pygame_gui.elements.UIScrollingContainer(
+            relative_rect=pygame.Rect(
+                (self.ui_offset_x + GRID, self.ui_offset_y + self.grid * 20),
+                (self.grid * 40, self.grid * 30)),
+            manager=self.ui_manager
+        )
+        label_set = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect((0, 0), (GRID * 40, GRID* 3)),
+            text='Выберите вооружение',
+            manager=self.ui_manager,
+            container=scrolling_container
+        )
         # Для отслеживания состояния
         self.exit_pressed = False
         self.level_pressed: int = -1        # -1 нихера не выбрали

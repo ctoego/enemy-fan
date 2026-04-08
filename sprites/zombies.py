@@ -133,7 +133,7 @@ class BaseZombie(pygame.sprite.Sprite):
         current_time = pygame.time.get_ticks()
         elapsed = current_time - self.last_update
         
-        if elapsed >= 16:  # ~60 FPS, фиксированный интервал быстрее чем деление
+        if elapsed >= 16:  
             # Получаем движение
             speed_x, speed_y = self.calculate_movement_optimized()
             
@@ -194,10 +194,10 @@ class ZM:
         from main import IMAGE
         from core.state_game import G
         cls.IMAGE = IMAGE
-        cls.WIDTH = G.WIDTH
+        cls.WIDTH = G.MAP_WIDTH
         cls.Zom_x = G.Zom_x
         cls.Zom_y = G.Zom_y
-        cls.GAME_HEIGHT = G.GAME_HEIGHT
+        cls.GAME_HEIGHT = G.MAP_HEIGHT
         cls.GRID = G.GRID
 
     @classmethod

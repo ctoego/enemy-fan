@@ -1,16 +1,22 @@
 import pygame, random
-
+from core.data import Data
 
 class Map(pygame.sprite.Sprite): # спрайты карты
     '''Спрайт блока на карте, обазначается 0 в массиве'''
-    def __init__(self, x, y, GRID): # number - номер клетки
+    def __init__(self, x, y, GRID, style: str): 
         pygame.sprite.Sprite.__init__(self)
-        color = random.choice([(0, 255, 0), (0, 250, 0), (0, 247, 0), (0, 243, 0)])
+        try:
+            self.bg_color = random.choice(Data.STYLE[style]['bg_color'])
+        except KeyError:
+            print(f"Error:  map.py class Map: I can't see the color")
+            self.bg_color = (24, 243, 46)
 
-        self.color = color
-        
         self.image = pygame.Surface((GRID, GRID))
-        self.image.fill(self.color)
+        try:
+            self.image.fill(self.bg_color)
+        except ValueError:
+            self.image.fill((24, 243, 46))
+            print(f"Error:  map.py class Map: invalid color")
         self.rect = self.image.get_rect()
 
         self.cell_x = x

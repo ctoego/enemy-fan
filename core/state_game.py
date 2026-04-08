@@ -25,9 +25,9 @@ class G:
     GREEN: tuple = ()
     BLUE : tuple = ()
 
-    camera : Optional['Camera'] = None              # камера, добавляем после определения размеров экрана
+    camera : Optional['Camera'] = None  # камера, добавляем после определения размеров экрана
 
-
+    update_timer: int = 0           # таймер обновления
     #* game var
     game: bool = False              # играем или сидим в менюшке
     LEVEL: int = - 1                # 0 = infifnite mode, -1 = not game
@@ -86,6 +86,8 @@ class G:
             "menu_game_4": False,
             }  
         cls.health = 5000
+        cls.world_mouse_x:int = 0
+        cls.world_mouse_y:int = 0
 
 
     @classmethod
@@ -123,7 +125,6 @@ class G:
 
     @classmethod
     def start_game(cls):
-        from core.sprite_group import SG
         cls.WAVE = 0 # номер волны
         cls.GAME_ZOMBIE = True # начали ли мы игру
         cls.OPT = 0
@@ -133,5 +134,3 @@ class G:
         cls.VICTORY = False # на уровнях, выйграли или нет
         cls.MAX_TURRENT = 25 # максимальное количество вещей
         cls.MAX_WINDOW  = 25
-
-

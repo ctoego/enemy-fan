@@ -62,5 +62,3 @@ class Arrow(pygame.sprite.Sprite): #когда игрок берёт стену,
                     if self.size_image != GRID:
                         self.size_image = GRID
                         self.image = pygame.Surface((self.size_image, self.size_image))
-            
-        

@@ -5,35 +5,32 @@ import sys
 import os
 
 
-
-
 # my code
 from core.state_game import G
 from core.console import DevConsole
 from core.level_manager import LM
 from core.sprite_group import SG
+from core.data import Data
 
 from game_ui.menu import Button_1, Button_2
 from game_ui.level import SurferLevel
 from game_ui.set import SurferSetting
 from game_ui.option import grids_config, img
 
-
 from sprites.arrow import Arrow
 from sprites.map import Map
 from sprites.window import Window
-from sprites.bullet import Bullet_1 # класс для выстрелов
-from data.data import Data
+from sprites.simple_cannon import SimpleCannon # простая пушка
+
 
 # спрайты зомби в папке zombies
 from sprites.zombies import ZM, Zombie_1, Zombie_2
 
 
-DATA = Data()
 
-LM.init_enemy(DATA.loading_enemy())
+LM.init_enemy(Data.loading_enemy())
 
-CONFIG = DATA.SETTING 
+CONFIG = Data.SETTING 
 
 if CONFIG["resolution"] == "auto":
     geom_disp = ctypes.windll.user32 #* получаем разрешение монитора
@@ -62,15 +59,15 @@ else:   #* в любом случае выбираем это, так же эт�
 
 
 G.init_from_main(
-    colors = DATA.COLOR,
+    colors = Data.COLOR,
     screen_params = (WIDTH, HEIGHT),
     game_params = {
-        'FPS': int(DATA.SETTING['FPS_max'])
+        'FPS': int(Data.SETTING['FPS_max'])
     }
 )
 G.init_camera()
-G.Zom_x = G.WIDTH//2 - G.GRID*2   #*куда должны идти зомби, координаты базы
-G.Zom_y = G.GAME_HEIGHT - G.GRID*4
+G.Zom_x = G.MAP_WIDTH//2 - G.GRID*2   #*куда должны идти зомби, координаты базы
+G.Zom_y = G.MAP_HEIGHT//2 - G.GRID*2
 
 
 del WIDTH
@@ -147,42 +144,9 @@ class Matrix(pygame.sprite.DirtySprite):
             self.dirty = 1
 
 
-class Turret_1(pygame.sprite.Sprite): 
-    def __init__(self, number_grid):  
-        pygame.sprite.Sprite.__init__(self)
-        self.number_grid = number_grid
-        self.size_image_x = G.GRID
-        self.size_image_y = G.GRID
-        self.image = pygame.Surface((self.size_image_x, self.size_image_y))
-        self.image.fill((200, 120, 0))
-        self.rect = self.image.get_rect()
-        self.rect.x = number_grid[0] * G.GRID
-        self.rect.y = number_grid[1] * G.GRID
-        self.time_s = 60 # через какое время может стрелять турэль
-        self.time = 60
-
-        self.update_rate = 60  # Частота обновления (Гц)
-        self.update_interval = 1000.0 / 60  # Интервал в мс
-        
-        self.last_update = pygame.time.get_ticks()
-
-        self.direction = 1
-    def update(self, keys):
-        current_time = pygame.time.get_ticks()
-        elapsed = current_time - self.last_update
-        
-        if elapsed >= self.update_interval:
-
-            if  G.MAPS[self.number_grid[0]][ self.number_grid[1]] != 2:self.kill()    #если нет в списке -> удаляем
-            self.time += 1
-            if self.time >= self.time_s and keys[pygame.K_q]:
-                bul = Bullet_1(self.rect.x, self.rect.y, mousex, mousey, G.GRID)
-                SG.all_sprites_bullet.add(bul)
-                self.time = 0
-            self.last_update = current_time
 
 
-class Spawn(pygame.sprite.Sprite): # спрайт спавна наших юнитов( распологается на краю карты)
+class Spawn(pygame.sprite.Sprite): # спрайт базы 
     def __init__(self):
 
         pygame.sprite.Sprite.__init__(self)
@@ -210,34 +174,30 @@ class Spawn(pygame.sprite.Sprite): # спрайт спавна наших юни
 
 
 def cret_new_game(level):
-
-    G.reset_var_game()
-    G.start_game()
-
-
-    SG.clear_sprites_group()  # пересоздаём группы спрайтов
-    SG.init_chunks()
-
-    for x in range(G.MAP_COUNT_WIDTH):
-        for y in range(G.MAP_COUNT_HEIGHT):
-            map = Map(x, y, G.GRID)
-            SG.all_sprites_map.add(map)
-
-    SG.rebuild_all_chunks()
-    global spawn
-    
-    spawn = Spawn()
-    SG.all_sprites_spawn.add(spawn)
-    
-    z = Zombie_1()
-
-    SG.all_sprites_zobies.add(z)
-
-    if level >= -1:
-        s = DATA.loading_level(level)
+    if level > -1:  #* -1 заглушка
+        s = Data.loading_level(level)
         if s:
             LM.new_level(s)
 
+        G.reset_var_game()
+        G.start_game()
+
+        SG.clear_sprites_group()  # пересоздаём группы спрайтов
+        SG.init_chunks()
+        for x in range(G.MAP_COUNT_WIDTH):
+            for y in range(G.MAP_COUNT_HEIGHT):
+                map = Map(x, y, G.GRID, LM.level_config['style'])
+                SG.all_sprites_map.add(map)
+
+        SG.rebuild_all_chunks()
+        global spawn
+
+        spawn = Spawn()
+        SG.all_sprites_spawn.add(spawn)
+
+        z = Zombie_1()
+
+        SG.all_sprites_zobies.add(z)
 
 cret_new_game(-1)     #? вызываем, чтобы потом с первого раза начиналась игра
 
@@ -366,18 +326,18 @@ def endless_mode_update_sprites():  # обновление спрайтов
     SG.all_sprites_spawn.update(SG.all_sprites_zobies)
     SG.all_sprites_turent.update(keys)
     SG.all_sprites_zobies.update(SG.all_sprites_window, SG.all_sprites_bullet)
-    SG.all_sprites_bullet.update(SG.all_sprites_zobies, G.GRID, G.WIDTH, G.HEIGHT)
+    SG.all_sprites_bullet.update(SG.all_sprites_zobies, G.GRID, G.MAP_WIDTH, G.MAP_HEIGHT)
 
 
 
 
 # TODO классы менюшек(выбора уровня, настроек)
 surferlevel = SurferLevel(G.GRID) 
-surfersetting = SurferSetting(G.GRID, DATA) 
+surfersetting = SurferSetting(G.GRID, Data) 
 
 
 
-if DATA.SETTING['intro']:   
+if Data.SETTING['intro']:   
     for number in range(1, len(os.listdir("./image/intro"))):   # TODO заставка
         for event in pygame.event.get():
             
@@ -419,18 +379,8 @@ while G.running:
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
             
-            if event.key == pygame.K_m and G.camera:
-                G.camera.toggle_mode()
-            
-            if G.camera and G.camera.mode == "manual":
-                if event.key == pygame.K_a:
-                    G.camera.move(-10, 0)
-                elif event.key == pygame.K_d:
-                    G.camera.move(10, 0)
-                elif event.key == pygame.K_w:
-                    G.camera.move(0, -10)
-                elif event.key == pygame.K_s:
-                    G.camera.move(0, 10)
+
+
 
             if event.key == pygame.K_F12:  
                 console.toggle()
@@ -466,11 +416,11 @@ while G.running:
             if (G.VOLUME_TURRENT < G.MAX_TURRENT or G.VOLUME_WINDOW < G.MAX_WINDOW):#TODO c каждой волной повышаем допустимое значение
                 if G.OPT == 1:
                     if G.VOLUME_TURRENT < G.MAX_TURRENT:  #TODO c каждой волной повышаем допустимое значение
-                        number_sp = grids_config(G.MAPS, G.GRID, world_mouse_x, world_mouse_y)  # type: ignore
+                        number_sp = grids_config(G.MAPS, G.GRID, G.world_mouse_x, G.world_mouse_y)  # type: ignore
                         if number_sp:
                             if G.MAPS[number_sp[0]][number_sp[1]] == 0: 
 
-                                player = Turret_1(number_sp)
+                                player = SimpleCannon(number_sp)
                                 G.MAPS[number_sp[0]][ number_sp[1]] = 2
                                 SG.all_sprites_turent.add(player)
                                 G.VOLUME_TURRENT += 1
@@ -478,7 +428,7 @@ while G.running:
 
                 elif G.OPT == 2:
                     if G.VOLUME_WINDOW < G.MAX_WINDOW:
-                        number_sp = grids_config(G.MAPS, G.GRID, world_mouse_x, world_mouse_y)  # type: ignore
+                        number_sp = grids_config(G.MAPS, G.GRID, G.world_mouse_x, G.world_mouse_y)  # type: ignore
                         if number_sp:
                             if G.MAPS[number_sp[0]][number_sp[1]] == 0:  # если на клетке уже есть  спрайт - ничего не делаем
 
@@ -501,25 +451,25 @@ while G.running:
     if G.game: 
         if G.GAME_ZOMBIE:
             if G.camera is not None:
-                world_mouse_x = mousex + G.camera.x
-                world_mouse_y = mousey + G.camera.y
-                G.camera.update(world_mouse_x, world_mouse_y)
+                G.world_mouse_x = mousex + G.camera.x
+                G.world_mouse_y = mousey + G.camera.y
+                G.camera.update(G.world_mouse_x, G.world_mouse_y)
             else:  
                 print(f'Играем без камеры')
-                world_mouse_x = mousex
-                world_mouse_y = mousey
+                G.world_mouse_x = mousex
+                G.world_mouse_y = mousey
 
             if keys[pygame.K_DELETE]: # удаление объекта
-                number_sp = grids_config(G.MAPS, G.GRID, world_mouse_x, world_mouse_y)
-                
-                if G.MAPS[number_sp[0]][ number_sp[1]] == 2:
-                    G.VOLUME_TURRENT -=1
-                    G.MAPS[number_sp[0]][ number_sp[1]] = 0
-                    SG.mark_cell_dirty(number_sp[0], number_sp[1])
-                elif G.MAPS[number_sp[0]][ number_sp[1]] == 3:
-                    G.VOLUME_WINDOW -=1
-                    G.MAPS[number_sp[0]][ number_sp[1]] = 0
-                    SG.mark_cell_dirty(number_sp[0], number_sp[1])
+                number_sp = grids_config(G.MAPS, G.GRID, G.world_mouse_x, G.world_mouse_y)
+                if number_sp:
+                    if G.MAPS[number_sp[0]][ number_sp[1]] == 2:
+                        G.VOLUME_TURRENT -=1
+                        G.MAPS[number_sp[0]][ number_sp[1]] = 0
+                        SG.mark_cell_dirty(number_sp[0], number_sp[1])
+                    elif G.MAPS[number_sp[0]][ number_sp[1]] == 3:
+                        G.VOLUME_WINDOW -=1
+                        G.MAPS[number_sp[0]][ number_sp[1]] = 0
+                        SG.mark_cell_dirty(number_sp[0], number_sp[1])
 
 
                 SG.all_sprites_window.update(G.MAPS)
@@ -541,6 +491,16 @@ while G.running:
             if keys[pygame.K_1]: G.OPT = 1    #hotkeys for control 
             if keys[pygame.K_2]: G.OPT = 2
 
+            if keys[pygame.K_a]:    G.camera.move(-5, 0)    # type: ignore
+            if keys[pygame.K_d]:    G.camera.move(5, 0)    # type: ignore
+            if keys[pygame.K_w]:    G.camera.move(0, -5)    # type: ignore
+            if keys[pygame.K_s]:    G.camera.move(0, 5)    # type: ignore
+            if keys[pygame.K_RCTRL] or keys[pygame.K_LCTRL]: 
+                G.camera.toggle_mode(True)  # type: ignore
+            else:
+                G.camera.toggle_mode(False)  # type: ignore
+
+
             if str(SG.all_sprites_zobies) == "<Group(0 sprites)>": 
                 LM.new_WAVE(G.WAVE)
                 G.WAVE += 1
@@ -560,16 +520,16 @@ while G.running:
                 
                 G.VICTORY = True
                 G.GAME_ZOMBIE = False 
-                DATA.SAVE["level"][f'{G.LEVEL}'] = True
+                Data.SAVE["level"][f'{G.LEVEL}'] = True
                 G.LEVEL = -1
-                DATA.save_game()
+                Data.save_game()
                 
 
             if keys[pygame.K_F2]: #? если очень хочется, можно создать ещё зомби
                 zomb = Zombie_2()
                 SG.all_sprites_zobies.add(zomb)
 
-            
+
             screen.blit(f1.render(f'Волна: {G.WAVE} из {LM.count_wave}', True, (180, 0, 0)), (10, G.GRID*5))
 
             screen.blit(f1.render(f'Доступно битых окон: {G.MAX_WINDOW - G.VOLUME_WINDOW}', True, (180, 0, 0)), (10, G.GRID*7))
@@ -626,7 +586,6 @@ while G.running:
 
 
     if CONFIG["FPS_see"] == True:
-
         fps_text = f1.render(f"fps: {int(clock.get_fps())}", True, (180, 0, 0))
         screen.blit(fps_text, (10, 10))
     if keys[pygame.K_F7]: G.FPS = 200       #! нужно поменять

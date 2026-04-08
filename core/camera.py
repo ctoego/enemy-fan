@@ -9,8 +9,8 @@ class Camera:
         self.screen_width = screen_width
         self.screen_height = screen_height
 
-        self.x: int = 0      # Смещение камеры
-        self.y: int = 0
+        self.x: int = map_width //4      # Смещение камеры
+        self.y: int = map_height //4
 
         self.max_x: int = max(0, self.map_width - self.screen_width)
         self.max_y: int = max(0, self.map_height - self.screen_height)
@@ -21,15 +21,15 @@ class Camera:
     def set_mode(self, mode: str):
         self.mode = mode
     
-    def toggle_mode(self):
-        self.mode = "follow" if self.mode == "manual" else "manual"
+    def toggle_mode(self, s: bool):
+        self.mode = "follow" if s else "manual"
     
     def update(self, target_x=None, target_y=None):
         if self.mode == "follow" and target_x is not None  and target_y is not None:
             desired_x = target_x - self.screen_width // 2
             desired_y = target_y - self.screen_height // 2
-            self.x = max(0, min(desired_x, self.max_x))
-            self.y = max(0, min(desired_y, self.max_y))
+            self.x = max(0, min(int(desired_x//1.3), self.max_x))
+            self.y = max(0, min(int(desired_y//1.3), self.max_y))
     
     def move(self, dx, dy):
         if self.mode == "manual":

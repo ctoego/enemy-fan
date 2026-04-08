@@ -7,7 +7,7 @@ class Window(pygame.sprite.Sprite): # окна
     def __init__(self,  number, GRID):
         pygame.sprite.Sprite.__init__(self)
         
-        self.size_image = 20
+        self.size_image = GRID
         self.image = pygame.Surface((self.size_image, self.size_image))
         self.image.fill((114, 200, 244))
         self.rect = self.image.get_rect()

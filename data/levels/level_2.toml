@@ -1,0 +1,22 @@
+# I hope, hope
+
+# Обучение
+
+
+name = 'Начало пути'
+number_level = 2
+
+difficulty_level = 1                # лёгкий уровень сложности
+count_wave = 8                      # число волн
+
+style = 'summer'
+
+ 
+[enemy] # распределение врагов  по волнам
+   
+Zombie_1 = 'all'   # all - может встречаться на всех волнах, - для 
+Zombie_2 = '2-end' # со 2 по конец
+Zombie_3 = '5-end'
+
+
+

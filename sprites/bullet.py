@@ -9,8 +9,9 @@ class Bullet_1(pygame.sprite.Sprite):
         self.image = pygame.Surface((GRID, GRID))
         self.image.fill((0, 0, 0 ))
         self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
+        self.world_x = x
+        self.world_y = y
+        self.rect.center = (self.world_x, self.world_y)
         self.place_center = x_place, y_place
         self.ok = False
         self.speed_curs_x_h = 0

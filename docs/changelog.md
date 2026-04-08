@@ -28,3 +28,10 @@
 
 * add chunks
 * I'm experimenting with the camera. Again.
+
+#### 06-04-2026
+
+* Imade a camera( I hope )
+* edit class Data, moved to folder core
+* create style.toml
+
