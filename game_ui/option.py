@@ -52,7 +52,14 @@ def img(IMAGE, WIDTH, HEIGHT, GRID):
         w.append(im)
     IMAGE["zombie"]["2"]['right'] = w
 
+    card = pygame.image.load("./image/card.jpg").convert()
+    card = pygame.transform.scale(card, (GRID * 4, GRID * 4))
+    IMAGE["card"] = card
 
+    card = pygame.image.load("./image/card_w.jpg").convert()
+    card = pygame.transform.scale(card, (GRID * 4, GRID * 4))
+
+    IMAGE["card_w"] = card
     return IMAGE
 
 # вычисление сетки

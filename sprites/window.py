@@ -20,3 +20,8 @@ class Window(pygame.sprite.Sprite): # окна
 
         if MAPS[self.number[0]][self.number[1]] == False or self.health <= 0:self.kill()    #если нет в списке -> удаляем
 
+class WindowCard:
+    '''Карта при выборе'''
+    image = "card_w"    #! дописать
+    text = 'Битое стекло'
+    sprite = Window

@@ -11,21 +11,25 @@ from core.console import DevConsole
 from core.level_manager import LM
 from core.sprite_group import SG
 from core.data import Data
+from core.log import Log
 
-from game_ui.menu import Button_1, Button_2
+from game_ui.menu import Button_1, Button
 from game_ui.level import SurferLevel
 from game_ui.set import SurferSetting
 from game_ui.option import grids_config, img
+from game_ui.gameUI import SurferGame
 
 from sprites.arrow import Arrow
 from sprites.map import Map
-from sprites.window import Window
-from sprites.simple_cannon import SimpleCannon # простая пушка
+from sprites.window import Window, WindowCard
+from sprites.simple_cannon import SimpleCannon, SimpleCannonCard # простая пушка
 
 
 # спрайты зомби в папке zombies
 from sprites.zombies import ZM, Zombie_1, Zombie_2
 
+Log.init(__file__)
+a = os.path.relpath(__file__)
 
 
 LM.init_enemy(Data.loading_enemy())
@@ -69,6 +73,12 @@ G.init_camera()
 G.Zom_x = G.MAP_WIDTH//2 - G.GRID*2   #*куда должны идти зомби, координаты базы
 G.Zom_y = G.MAP_HEIGHT//2 - G.GRID*2
 
+SG.init_sprite_card(
+    {
+        WindowCard,
+        SimpleCannonCard
+    }
+)
 
 del WIDTH
 del HEIGHT
@@ -85,7 +95,9 @@ screen.set_alpha(None)  #* отключаем альфа канал для пр�
 pygame.display.set_caption("Enemy fan")
 clock = pygame.time.Clock()
 
-f1 = pygame.font.Font(None, 36)
+
+G.init_font()
+
 
 mousex, mousey = pygame.mouse.get_pos() # курсор
 
@@ -93,25 +105,10 @@ mousex, mousey = pygame.mouse.get_pos() # курсор
 console = DevConsole(screen, G.WIDTH, G.HEIGHT) # консоль
 #сетка
 
-IMAGE = {"numbers": {}, #словарь с изображениями
-        "background":{"main": ""},
-        "buttons": {}, #словарь с кнопками
-        "intro":[],
-        "zombie": {
-            "1": {
-                "left": [],
-                "right":[]
-            },
-            "2": {
-                "left": [],
-                "right":[]
-            }
-        }
-        } 
 
 
 
-IMAGE = img(IMAGE,G.WIDTH, G.HEIGHT, G.GRID)
+G.IMAGE = img(G.IMAGE,G.WIDTH, G.HEIGHT, G.GRID)
 
 ZM.update_variable()        # обновляем данные для зомби
 
@@ -119,7 +116,7 @@ obj_btn_1 = []  #   для кнопок
 obj_btn_2 = []
 obj_btn_3 = []  #   выбор уровней
 
-fin = len(IMAGE["intro"])
+fin = len(G.IMAGE["intro"])
 
 
 
@@ -181,6 +178,7 @@ def cret_new_game(level):
 
         G.reset_var_game()
         G.start_game()
+        surferGame.update()
 
         SG.clear_sprites_group()  # пересоздаём группы спрайтов
         SG.init_chunks()
@@ -212,7 +210,7 @@ def help():
     pygame.draw.rect(screen, (196, 241, 149, 10), (G.GRID * 19, 10, G.GRID * 55, G.GRID * 17))
     i = 1
     for  line in text:
-        text_surface = f1.render(line, True, (10, 10, 10))
+        text_surface = G.f1.render(line, True, (10, 10, 10))
         screen.blit(text_surface, (G.GRID * 20, G.GRID * i))
         i += 2
 
@@ -224,26 +222,34 @@ SG.all_sprites_arrow.add(arrow)
 
 
 def open_game_menu_1(): 
-    if G.VARIABLE["menu_game_1"] == True: G.VARIABLE["menu_game_1"] = False
+    if G.VARIABLE["menu_game_1"]: G.VARIABLE["menu_game_1"] = False
     else: G.VARIABLE["menu_game_1"] = True
 
 
-button_1_game = Button_2(G.WIDTH//1.07, G.HEIGHT//1.13, G.WIDTH, G.HEIGHT,  open_game_menu_1)
 
 
-button_open_turrent_1 = Button_2(G.WIDTH//3.5, G.HEIGHT//1.07, G.WIDTH, G.HEIGHT, None, "турели", True)
+surferGame = SurferGame(screen)
 
-
-
-
-
-
-button_open_window = Button_2(G.WIDTH//2.9, G.HEIGHT//1.07, G.WIDTH, G.HEIGHT, None, "битое стекло", True)
-
-
-
-
-SG.all_sprites_menu_game.add(button_1_game,   button_open_turrent_1,  button_open_window)
+#button_1_game = Button( x = G.GRID * 85, y = G.GRID * 50,
+#                        width = 4, height = 3,
+#                        text = "меню",
+#                        command = open_game_menu_1)
+#
+#
+#button_open_turrent_1 = Button(
+#    
+#    G.WIDTH//3.5, G.HEIGHT//1.07, 2, 1, None, "турели")
+#
+#
+#
+#
+#
+#button_open_window = Button(G.WIDTH//2.9, G.HEIGHT//1.07, 2, 1, None, "битое стекло")
+#
+#
+#
+#
+#SG.all_sprites_menu_game.add(button_1_game,   button_open_turrent_1,  button_open_window)
 
 
 
@@ -253,9 +259,11 @@ def stop_game():
 def full_stop_game(): sys.exit()#* Закрываем игру
 
 
-btn_2_game = Button_1(G.WIDTH//1.5, G.HEIGHT//1.1 ,G.WIDTH//10 , G.HEIGHT//13 ,obj_btn_1,"выйти в меню", stop_game, 30 );obj_btn_1 = btn_2_game.loading_lis()    # ЗАБИРАЕМ СПИСОК
+btn_2_game = Button_1(G.WIDTH//1.5, G.HEIGHT//1.1 ,G.WIDTH//10 , G.HEIGHT//13 ,"выйти в меню", stop_game, 30 )
+obj_btn_1.append(btn_2_game)    # ЗАБИРАЕМ СПИСОК
 
-btn_3_game = Button_1(G.WIDTH//1.2, G.HEIGHT//1.1 , G.WIDTH//10 , G.HEIGHT//13 ,obj_btn_1,"рабочий стол", full_stop_game, 30);obj_btn_1 = btn_3_game.loading_lis()    # ЗАБИРАЕМ СПИСОК
+btn_3_game = Button_1(G.WIDTH//1.2, G.HEIGHT//1.1 , G.WIDTH//10 , G.HEIGHT//13 ,"рабочий стол", full_stop_game, 30)
+obj_btn_1.append(btn_3_game)    # ЗАБИРАЕМ СПИСОК
 
 
 surf = pygame.Surface((G.WIDTH, G.GRID*5))
@@ -272,7 +280,8 @@ def run_game(level):
     G.game = True
     
 
-btn_1_menu = Button_1(G.WIDTH//2, G.HEIGHT//2 , G.WIDTH//9 , G.HEIGHT//13 ,obj_btn_2,"бесконечность", lambda: (run_game(0)), 27);   obj_btn_2 = btn_1_menu.loading_lis()    # ЗАБИРАЕМ СПИСОК
+btn_1_menu = Button_1(G.WIDTH//2, G.HEIGHT//2 , G.WIDTH//9 , G.HEIGHT//13 ,"бесконечность", lambda: (run_game(0)), 27)
+obj_btn_2.append(btn_1_menu)    # ЗАБИРАЕМ СПИСОК
 # кнопки в главном меню с текстом
 
 
@@ -281,15 +290,18 @@ def help_game():
     if G.help_open == True: G.help_open = False
     else: G.help_open = True #* открытие окна помощи
 
-btn_2_menu = Button_1(G.WIDTH//2, G.HEIGHT//1.7 , G.WIDTH//9 , G.HEIGHT//13 ,obj_btn_2,"помощь", help_game);obj_btn_2 = btn_2_menu.loading_lis()    # ЗАБИРАЕМ СПИСОК
+btn_2_menu = Button_1(G.WIDTH//2, G.HEIGHT//1.7 , G.WIDTH//9 , G.HEIGHT//13 ,"помощь", help_game)
+obj_btn_2.append(btn_2_menu)    # ЗАБИРАЕМ СПИСОК
 def setting_game(): # TODO открытие настроек
     G.setting_open = not G.setting_open
 
-btn_3_menu = Button_1(G.WIDTH//3, G.HEIGHT//2 , G.WIDTH//9 , G.HEIGHT//13 ,obj_btn_2, "настройки", setting_game);   obj_btn_2 = btn_3_menu.loading_lis()    # ЗАБИРАЕМ СПИСОК
+btn_3_menu = Button_1(G.WIDTH//3, G.HEIGHT//2 , G.WIDTH//9 , G.HEIGHT//13 ,"настройки", setting_game)
+obj_btn_2.append(btn_3_menu)    # ЗАБИРАЕМ СПИСОК
 
 def exit_game(): sys.exit() #* выход из игры
 
-btn_4_menu = Button_1(G.WIDTH//3, G.HEIGHT//1.7 , G.WIDTH//9 , G.HEIGHT//13 ,obj_btn_2,"выход", exit_game); obj_btn_2 = btn_4_menu.loading_lis()    # ЗАБИРАЕМ СПИСОК
+btn_4_menu = Button_1(G.WIDTH//3, G.HEIGHT//1.7 , G.WIDTH//9 , G.HEIGHT//13 ,"выход", exit_game)
+obj_btn_2.append(btn_4_menu)    # ЗАБИРАЕМ СПИСОК
 
 
 
@@ -299,7 +311,8 @@ def level_game():
 
     if G.level_open : G.level_open = False
     else: G.level_open = True #* открытие окна уровней
-btn_6_menu = Button_1(G.WIDTH//1.2, G.HEIGHT//1.2 , G.WIDTH//12 , G.HEIGHT//15 ,obj_btn_2,"уровни", level_game); obj_btn_2 = btn_6_menu.loading_lis()
+btn_6_menu = Button_1(G.WIDTH//1.2, G.HEIGHT//1.2 , G.WIDTH//12 , G.HEIGHT//15 ,"уровни", level_game)
+obj_btn_2.append(btn_6_menu)    # ЗАБИРАЕМ СПИСОК
 
 
 
@@ -311,7 +324,7 @@ def matrix():
     for _ in range(1296):     # создание матрицы на главном
         if counter >= 48:   x_f, y_f, counter = 0, y_f + G.GRID*2, 0
 
-        map = Matrix(x_f, y_f, IMAGE)
+        map = Matrix(x_f, y_f, G.IMAGE)
         SG.all_sprites_matrix.add(map)
 
         x_f += G.GRID*2 # перемещаем на одну клетку
@@ -354,14 +367,14 @@ if Data.SETTING['intro']:
             if event.type == pygame.QUIT: pygame.quit()
         if pygame.mouse.get_pressed()[0] : break  #TODO ждём пока пользователь не дочитает
         screen.fill((191, 0, 1))
-        screen.blit(f1.render("Нажми на курсор.", True, (169, 218, 227)), (G.GRID*40 , G.GRID))
-        screen.blit(f1.render("Всё будет хорошо.", True, (169, 218, 227)), (G.GRID , G.GRID*4))
-        screen.blit(f1.render("Они уже здесь.", True, (169, 218, 227)), (G.GRID*10 , G.GRID*40))
-        screen.blit(f1.render("«В одиночестве есть своя очень странная красота». — Лив Тайлер", True, (169, 218, 227)), (G.GRID*20 , G.GRID*10))
+        screen.blit(G.f1.render("Нажми на курсор.", True, (169, 218, 227)), (G.GRID*40 , G.GRID))
+        screen.blit(G.f1.render("Всё будет хорошо.", True, (169, 218, 227)), (G.GRID , G.GRID*4))
+        screen.blit(G.f1.render("Они уже здесь.", True, (169, 218, 227)), (G.GRID*10 , G.GRID*40))
+        screen.blit(G.f1.render("«В одиночестве есть своя очень странная красота». — Лив Тайлер", True, (169, 218, 227)), (G.GRID*20 , G.GRID*10))
         
-        screen.blit(f1.render("«Вчера я был умным, поэтому я хотел изменить мир. Сегодня я мудр, поэтому меняюсь я сам» — Майя Энджелоу", True, (169, 218, 227)), (G.GRID*10 , G.GRID*20))
-        screen.blit(f1.render("«Я стала замечать гравитацию ещё в детстве» — Камерон Диаз", True, (169, 218, 227)), (G.GRID*20 , G.GRID*30))
-        screen.blit(f1.render("«Спокойные люди имеют самые громкие мысли». — Стивен Хокинг", True, (169, 218, 227)), (G.GRID*40 , G.GRID*40))
+        screen.blit(G.f1.render("«Вчера я был умным, поэтому я хотел изменить мир. Сегодня я мудр, поэтому меняюсь я сам» — Майя Энджелоу", True, (169, 218, 227)), (G.GRID*10 , G.GRID*20))
+        screen.blit(G.f1.render("«Я стала замечать гравитацию ещё в детстве» — Камерон Диаз", True, (169, 218, 227)), (G.GRID*20 , G.GRID*30))
+        screen.blit(G.f1.render("«Спокойные люди имеют самые громкие мысли». — Стивен Хокинг", True, (169, 218, 227)), (G.GRID*40 , G.GRID*40))
         pygame.display.flip()
 
 
@@ -438,12 +451,12 @@ while G.running:
                                 G.VOLUME_WINDOW += 1
                                 SG.mark_cell_dirty(number_sp[0], number_sp[1])
 
-            if G.game:
+            if G.game:pass
                 # выбираем турели
-                if button_open_turrent_1.rect.collidepoint(mousex, mousey): 
-                    G.OPT = 1
-                elif button_open_window.rect.collidepoint(mousex, mousey): 
-                    G.OPT = 2
+               # if button_open_turrent_1.rect.collidepoint(mousex, mousey): 
+               #     G.OPT = 1
+               # elif button_open_window.rect.collidepoint(mousex, mousey): 
+               #     G.OPT = 2
 
 
 
@@ -495,6 +508,8 @@ while G.running:
             if keys[pygame.K_d]:    G.camera.move(5, 0)    # type: ignore
             if keys[pygame.K_w]:    G.camera.move(0, -5)    # type: ignore
             if keys[pygame.K_s]:    G.camera.move(0, 5)    # type: ignore
+
+            # ===move the camera with the mouse===
             if keys[pygame.K_RCTRL] or keys[pygame.K_LCTRL]: 
                 G.camera.toggle_mode(True)  # type: ignore
             else:
@@ -529,21 +544,21 @@ while G.running:
                 zomb = Zombie_2()
                 SG.all_sprites_zobies.add(zomb)
 
+            
+            screen.blit(G.f1.render(f'Волна: {G.WAVE} из {LM.count_wave}', True, (180, 0, 0)), (10, G.GRID*5))
 
-            screen.blit(f1.render(f'Волна: {G.WAVE} из {LM.count_wave}', True, (180, 0, 0)), (10, G.GRID*5))
+            screen.blit(G.f1.render(f'Доступно битых окон: {G.MAX_WINDOW - G.VOLUME_WINDOW}', True, (180, 0, 0)), (10, G.GRID*7))
 
-            screen.blit(f1.render(f'Доступно битых окон: {G.MAX_WINDOW - G.VOLUME_WINDOW}', True, (180, 0, 0)), (10, G.GRID*7))
-
-            screen.blit(f1.render(f'Доступно орудий: {G.MAX_TURRENT - G.VOLUME_TURRENT}', True, (180, 0, 0)), (10, G.GRID*9))
-            screen.blit(f1.render(f'Здоровье: {G.health}', True, (180, 0, 0)), (10, G.GRID*11))
+            screen.blit(G.f1.render(f'Доступно орудий: {G.MAX_TURRENT - G.VOLUME_TURRENT}', True, (180, 0, 0)), (10, G.GRID*9))
+            screen.blit(G.f1.render(f'Здоровье: {G.health}', True, (180, 0, 0)), (10, G.GRID*11))
 
         elif G.VICTORY:
             pygame.draw.rect(screen, (64, 128, 255), (0, 0, G.WIDTH, G.HEIGHT))
-            screen.blit(f1.render("Победа!!!", True, (180, 0, 0)), (G.WIDTH//2, G.HEIGHT//2))
+            screen.blit(G.f1.render("Победа!!!", True, (180, 0, 0)), (G.WIDTH//2, G.HEIGHT//2))
             G.VARIABLE["menu_game_1"] = True
         else:
             pygame.draw.rect(screen, (64, 128, 255), (0, 0, G.WIDTH, G.HEIGHT))
-            WAVE_text = f1.render("Ты проиграл!", True, (180, 0, 0))
+            WAVE_text = G.f1.render("Ты проиграл!", True, (180, 0, 0))
             screen.blit(WAVE_text, (G.WIDTH//2, G.HEIGHT//2))
             G.VARIABLE["menu_game_1"] = True
 
@@ -552,19 +567,15 @@ while G.running:
         surf.fill(G.RED)  # Заполнение фона, цвет
 
 
-        screen.blit(surf, (0, G.HEIGHT- 90))
+      #  screen.blit(surf, (0, G.HEIGHT- 90))
         if G.VARIABLE["menu_game_1"]:
             for object in obj_btn_1:  object.process(screen)
 
         # обнолвляем и выводим кнопки в одном месте
         SG.all_sprites_menu_game.draw(screen)
         SG.all_sprites_menu_game.update(screen)
-        if G.VARIABLE["menu_game_2"]:
-            SG.all_sprites_decoration_btn.draw(screen)
-            SG.all_sprites_decoration_btn.update()
 
-
-
+        surferGame.draw()       # интерфейс
 
     else: # если не играем
 
@@ -586,7 +597,7 @@ while G.running:
 
 
     if CONFIG["FPS_see"] == True:
-        fps_text = f1.render(f"fps: {int(clock.get_fps())}", True, (180, 0, 0))
+        fps_text = G.f1.render(f"fps: {int(clock.get_fps())}", True, (180, 0, 0))
         screen.blit(fps_text, (10, 10))
     if keys[pygame.K_F7]: G.FPS = 200       #! нужно поменять
     if keys[pygame.K_F8]: G.FPS = 60

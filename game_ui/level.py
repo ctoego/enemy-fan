@@ -1,6 +1,7 @@
 import pygame
 import pygame_gui
 
+from core.level_manager import LM
 class SurferLevel():
     def __init__(self, GRID):
         '''выбор уровня'''
@@ -66,11 +67,38 @@ class SurferLevel():
             manager=self.ui_manager,
             container=scrolling_container
         )
+
+        from core.sprite_group import SG
+        y = 10
+        x = 1
+        spc = SG.sprite_card
+        for obj in spc:
+            btn_var = pygame_gui.elements.UIButton(
+                relative_rect=pygame.Rect((self.grid * x, self.grid * y), (GRID * 10, GRID * 3)),
+                text=obj.text,
+                manager=self.ui_manager,
+                container=scrolling_container
+            )
+            x += 10
+            if y == 2: y = 10
+            
+            self.button_action[btn_var] = lambda key = obj, btn = btn_var: self.btn_card(key, btn)
+
+
         # Для отслеживания состояния
         self.exit_pressed = False
         self.level_pressed: int = -1        # -1 нихера не выбрали
 
-    
+    def btn_card(self, card, btn):
+        '''Выбор карт'''
+        if card:
+            if card in LM.selected_card:
+                LM.selected_card.remove(card)
+                btn.unselect()
+            else:
+                LM.selected_card.add(card)
+                btn.select()    # Включает "выделенный" стиль
+
     def render(self, screen, dt):
         self.exit_pressed = False
         
@@ -85,6 +113,7 @@ class SurferLevel():
         self.ui_manager.process_events(event)
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             button_func = self.button_action.get(event.ui_element)
+
             if button_func:
                 button_func()
     

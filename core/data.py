@@ -1,5 +1,5 @@
 import json, toml, sys, time
-
+from core.log import Log
 class Data:
     
         
@@ -8,6 +8,7 @@ class Data:
     CONFIG:dict = {}
     COLOR: dict = {}
     STYLE: dict = {}
+    Log.init(__file__)
 
 
     try:
@@ -15,29 +16,28 @@ class Data:
             CONFIG = toml.load(f)  
         COLOR = CONFIG['color']
     except:
-        print('Error: data.py class Data: Error open or read config.toml. Stopping the program.')
+        Log.critical('data.py class Data: Error open or read config.toml. Stopping the program.')
         time.sleep(5)
         sys.exit()
     try:
         with open('./data/style.toml', 'r', encoding='utf-8') as f:  
             STYLE = toml.load(f)  
     except:
-        print('Error: data.py class Data: Error open or read style.toml. Stopping the program.')
+        Log.critical('data.py class Data: Error open or read style.toml. Stopping the program.')
         time.sleep(5)
         sys.exit()
 
     try:
         with open('./data/setting.json', 'r', encoding='utf-8') as f:
             SETTING =  json.load(f)
-    except :
-        print(f'Error: data.py class Data: Error open or read setting.json')
+    except:
+        Log.warning('data.py class Data: Error open or read setting.json. Reset the game setting.')
         SETTING = {
                 "FPS_see": True,
                 "intro": True,
                 "resolution": "1632x918",
                 "FPS_max": 120
                 }
-
 
     try:
         with open('./data/savegame.json', 'r',encoding='utf-8') as f:

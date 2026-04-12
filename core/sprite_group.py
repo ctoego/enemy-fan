@@ -3,8 +3,14 @@ import pygame
 from core.state_game import G
 from core.chunk import ChunkManager
 
+
+
 class SG:
-    '''SpriteGroup,  storing variables group sprites'''
+    ''' SpriteGroup,  storing variables group sprites 
+        Отрисовка, управление спрайтами
+    '''
+
+    sprite_card: set = set()
 
     all_sprites_map = pygame.sprite.Group()     # карта
     all_sprites_window = pygame.sprite.Group()  # шипы
@@ -17,7 +23,7 @@ class SG:
     all_sprites_matrix = pygame.sprite.Group()  # матрица на главном экране
 
     # кнопки
-    all_sprites_decoration_btn = pygame.sprite.Group()
+
     all_sprites_menu_game = pygame.sprite.Group()
     all_sprites_arrow = pygame.sprite.Group()
 
@@ -37,6 +43,9 @@ class SG:
         cls.all_sprites_bullet.empty()
         cls._cached_map_surface = None
 
+    @classmethod
+    def init_sprite_card(cls, d: set):
+        cls.sprite_card = d
     @classmethod
     def init_chunks(cls):
         cls.chunk_manager = ChunkManager(
@@ -60,7 +69,6 @@ class SG:
     
     @classmethod
     def endless_mode_render(cls, screen):
-        """Отрисовка с чанками (быстро!)"""
         camera = G.camera
 
 
@@ -74,7 +82,7 @@ class SG:
             # Fallback без чанков
             cls.all_sprites_map.draw(screen)
         
-        # Динамические объекты (как раньше)
+        # Динамические объекты 
         if camera:
             dynamic_groups = [  cls.all_sprites_spawn, cls.all_sprites_window, 
                                 cls.all_sprites_turent, cls.all_sprites_zobies, 

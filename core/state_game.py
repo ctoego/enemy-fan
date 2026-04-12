@@ -25,6 +25,23 @@ class G:
     GREEN: tuple = ()
     BLUE : tuple = ()
 
+    IMAGE: dict =  {"numbers": {}, #словарь с изображениями
+            "background":{"main": ""},
+            "buttons": {}, #словарь с кнопками
+            "intro":[],
+            "zombie": {
+                "1": {
+                    "left": [],
+                    "right":[]
+                },
+                "2": {
+                    "left": [],
+                    "right":[]
+                }
+        }
+    } 
+
+
     camera : Optional['Camera'] = None  # камера, добавляем после определения размеров экрана
 
     update_timer: int = 0           # таймер обновления
@@ -62,7 +79,11 @@ class G:
             "menu_game_2": False, # открытие/закрытие кнопок деврации и т.п.
             "menu_game_4": False, # открыти/закрытие кнопок выбора строительства
             }  
-
+    @classmethod
+    def stop_game(cls):
+        cls.GAME_ZOMBIE = False 
+        cls.LEVEL = -1
+        cls.VICTORY = False
 
     @classmethod
     def reset_var_game(cls):
@@ -121,6 +142,13 @@ class G:
             map_height = map_height_px,
             screen_width= cls.WIDTH,
             screen_height=cls.HEIGHT)
+        
+    @classmethod
+    def init_font(cls):
+        '''after init the screen'''
+        import pygame
+        cls.font_btn_wid_1 = pygame.font.SysFont('Arial', cls.WIDTH // 96)
+        cls.f1 = pygame.font.Font(None, 36)
 
 
     @classmethod

@@ -41,11 +41,11 @@
 
 ### Спрайты
 
-* ###### arrow.py - предмет на курсоре
-* ###### bullet.py - снаряды
-* ###### map.py - спрайты карты
-* ###### window.py - битое стекло или шипы
-* ###### zombie.py - все зомби
+*  arrow.py - предмет на курсоре
+*  bullet.py - снаряды
+*  map.py - спрайты карты
+*  window.py - битое стекло или шипы
+*  zombie.py - все зомби
 
 
 
@@ -67,17 +67,35 @@
 
 Основные команды:
 
+* help - показать помощь",
+* clear - очистить консоль",
+* wave \[число] - установить волну",
+* health \[число] - установить здоровье",
+* killall - убить всех зомби",
+* godmode - бессмертие базы",
+* fps \[число] - изменить FPS",
+* exit/close - закрыть консоль (ESC)",
+* screen - информация экрана"
 
+##### Логирование
 
-* help - помощь
-* close/exit - закрыть консоль(ESC)
+class log; core/log.py
+
+log.init(**file**)     добавление название файла в логирование, без этого: file\_name = 'unknown'
+
+log.error(cls, text: str = "", error = None)
+text - передающийся текст
+error - ошибка
+
+Уровни:
+
+* debug
+* info
+* error
+* warning
+* critical
 
 ### Карта
-
-
-
-Представлен двумерным массивом nuppy, x и y
-размер карты: 96 x 50 клеток(игровое поле меньше из за нижнего меню)
 
 
 
@@ -87,13 +105,15 @@
 3 - шипы
 
 
+
 ### расположение файлов
 
 ```
-.\\
+.\\\\\\\\
 
 |──main.py
-├──game\_ui/
+
+├──game\\\\\\\_ui/
 |   ├──menu.py
 |   ├──option.py
 |   ├──set.py   
@@ -102,21 +122,21 @@
 |	├──setting.json
 |	├──savegame.json
 |	├──config.toml
-|   ├──levels/ # описание уровней
-|	└──data.py
+|   	└──levels/ # описание уровней	
 ├──sprites/ 
-|   ├──arrow.py 
-|   ├──bullet.py
-|   ├──map.py
-|   ├──window.py
-|   └──zombie.py
+|	├──arrow.py 
+|	├──bullet.py
+|	├──map.py
+|	├──window.py
+|	└──zombie.py
 ├──core/
-|   ├──camera.py
-|   ├──chunk.py
-|   ├──console.py
-|   ├──level_manager.py
-|   ├──sprite_group.py
-|   └──state_game.py
+|	├──camera.py
+|	├──chunk.py
+|	├──console.py
+|	├──level\\\_manager.py
+|	├──sprite\\\_group.py
+|	├──state\\\_game.py
+|	└──data.py
 |
 └──image/ # изображения
 ```

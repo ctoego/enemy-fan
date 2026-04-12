@@ -37,3 +37,9 @@ class SimpleCannon(pygame.sprite.Sprite):
                 SG.all_sprites_bullet.add(bul)
                 self.time = 0
             self.last_update = current_time
+
+class SimpleCannonCard:
+    '''Карта при выборе'''
+    image = "card_w"     #! дописать
+    text = 'Простая пушка'
+    sprite = SimpleCannon

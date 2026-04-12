@@ -191,9 +191,8 @@ class ZM:
 
     @classmethod
     def update_variable(cls):
-        from main import IMAGE
         from core.state_game import G
-        cls.IMAGE = IMAGE
+        cls.IMAGE = G.IMAGE
         cls.WIDTH = G.MAP_WIDTH
         cls.Zom_x = G.Zom_x
         cls.Zom_y = G.Zom_y

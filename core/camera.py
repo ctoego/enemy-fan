@@ -16,7 +16,6 @@ class Camera:
         self.max_y: int = max(0, self.map_height - self.screen_height)
 
         self.mode = 'manual'
-    
 
     def set_mode(self, mode: str):
         self.mode = mode

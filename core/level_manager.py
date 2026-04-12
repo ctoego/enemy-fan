@@ -1,5 +1,4 @@
 
-
 class LM:
     ''' Level Manager - manager for spawn enemy, difficulty level, type enemy, style map
     score = int(wave*1.5 * (1 + difficulty_level * 0.7))
@@ -12,7 +11,11 @@ class LM:
     count_wave: int = 1
     enemy_spawn: dict = {}
     enemy_config: dict = {}
-    sum_score_enemy = 0
+    sum_score_enemy: int = 0
+
+    selected_card: set = set()  # Какие карты выбраны на уровень
+
+
 
     @classmethod
     def init_enemy(cls, config) -> None:

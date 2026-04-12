@@ -1,5 +1,8 @@
 
 import pygame
+'''
+    Console
+'''
 
 
 class DevConsole:
@@ -66,7 +69,6 @@ class DevConsole:
                 "  clear - очистить консоль",
                 "  wave [число] - установить волну",
                 "  health [число] - установить здоровье",
-                "  spawn [тип] [кол-во] - создать зомби",
                 "  killall - убить всех зомби",
                 "  godmode - бессмертие базы",
                 "  fps [число] - изменить FPS",
